@@ -1,0 +1,55 @@
+{
+  "project_name": "Vulnerability Conflict Resolver",
+  "track": "The Agent That Can Explain Why",
+  "sponsor_technology": {
+    "meterless": {
+      "used": true,
+      "what": "World Model engine, used for real: Meterless' unmodified TypeScript reference implementation (bundled with esbuild, Apache-2.0, see integrations/meterless/NOTICE.md) runs as a Node process driven from Python. Our three sources are sent as facts with confidence and provenance; the engine's conflict policy (source-priority: internal ticket > NVD > vendor) picks the winner, marks the others superseded and writes the audit trail. A Python implementation of the documented schema (agents/world_model.py) remains as the fallback when Node is missing. Sources are sent through Meterless' canonical ingest pipeline (idempotent: a re-run appends 0 events), the world is stored and resumable per evidence state, every event is written as JSONL with its source, and each report ends with an evidence trail read from the engine's state.",
+      "where": "agents/meterless_bridge.py, integrations/meterless/ (bridge.mjs, world-model.mjs), agents/timeline.py, shown in viewer.html ('Meterless engine' panel and timeline); evidence in logs/<CVE>_meterless.jsonl and logs/meterless_manifest.json; verified by check_meterless_bridge.py and check_timeline.py.",
+      "unique": "Used for the project's core problem - resolving contradicting claims - so the 'why' is an auditable record (which fact superseded which, under which policy, from which observation).",
+      "scope_note": "Only the World Model engine is used; the verdict follows the priority order we configure. Other Meterless engines and the control plane are not used. The reference's entityAt cannot reconstruct historical conflict winners, so per-day verdicts are captured live.",
+      "engines_used": [
+        "world-model"
+      ],
+      "engines_not_used": [
+        "hmem",
+        "markovian",
+        "scout-intent"
+      ],
+      "runtime_provider": {
+        "implemented": true,
+        "status": "Meterless Runtime (Nightshift) as AI provider is IMPLEMENTED (LLM_PROVIDER=meterless) and verified against a stand-in server that follows Meterless' official provider contract. It has NOT been run against a real Meterless Runtime: Nightshift has no Linux x86_64 build (organizers' answer in Help Meterless, 23 Oct 2026), and this project was built on Kali Linux x86_64.",
+        "what": "agents/meterless_runtime.py: OpenAI-compatible POST /v1/chat/completions and GET /v1/models, Bearer token, meterless-app and meterless-scope headers, URL normalisation, 'rt-local' rejected, unauthorized/online/offline states, connect-link parsing, auto-detect of local ports; reports name the model that answered.",
+        "where": "agents/meterless_runtime.py, agents/llm_provider.py, check_meterless_runtime.py (21 checks)",
+        "not_claimed": "No claim that requests ran through Nightshift or that a Nemotron model was served through it."
+      }
+    },
+    "cursor": {
+      "used": "brainstorming only",
+      "what": "Cursor was used for brainstorming. The project code was written with Claude (Claude Code). Cursor is optional under the final rules.",
+      "where": "N/A (not part of the runtime system)"
+    },
+    "nvidia": {
+      "used": true,
+      "status": "Run live on 23 Oct 2026 against NVIDIA's hosted API (free endpoint) with nvidia/nemotron-3.5-lightning-30b-a3b and measured on the 286-text corpus.",
+      "what": "LLM_PROVIDER=nvidia: the certainty judgement and report wording run on Nemotron. Handles the model's reasoning mode (thinking off) and the endpoint's rate limit (throttle + retry). Each report footer names the answering model.",
+      "where": "agents/llm_provider.py, check_nvidia_provider.py (fake-client tests), evaluation/RESULTS.md (last section), evaluation/results_nemotron_lightning.json",
+      "result": "Two runs on 23 Oct 2026 (prompt v2, thinking off). Test half, identical in both: 2/56 hedges missed, 0/86 false alarms (combined with rules: same). Dev half: 3/54 missed (0 with rules), false alarms 14/90 and 11/90 (the hosted endpoint is not fully deterministic at temperature 0). Corpus written by the author; not independent data. On 24 real advisory sentences labelled by the author (one run, 24 Oct 2026): 0/7 hedges missed but 14/17 clear sentences rated uncertain (llama3: 13/17) - the corpus result does not carry over to real text.",
+      "unique": "Measured on our own labelled corpus with a rule fixed in advance, not just 'connected'; two real obstacles (reasoning mode, rate limit) found by running it and covered by tests."
+    },
+    "zetaris": {
+      "used": true,
+      "status": "Integrated and verified live on 23 Oct 2026 (local Zetaris 2.4.3.1 in Docker): `python3 check_zetaris.py --live` passes 5/5 as of 24 Oct 2026 - SELECT 1, database VULN_SIGNALS exists, 17 cases read from Zetaris, the exploitation signal read from a fourth REST table, and the result for all 17 cases is identical to the result from the files.",
+      "what": "Data layer. The three evidence sources (NVD record, vendor changelog, internal ticket) are served as JSON by integrations/zetaris/data_server.py, registered in Zetaris as REST tables and joined by the SQL view vuln.signals (NVD LEFT JOIN vendor LEFT JOIN ticket; a missing source stays missing). The tool reads cases with SQL through the Zetaris REST API (POST /sql-editor/sqls/run) when started with --source zetaris. The agents are unchanged and get the same case structure as from files.",
+      "where": "agents/zetaris_client.py, agents/zetaris_sources.py, integrations/zetaris/ (setup_statements.py, data_server.py, docker-compose.data.yml), setup_zetaris.py, main.py --source; test: check_zetaris.py (offline) and check_zetaris.py --live.",
+      "fallback": "--source auto uses the files when Zetaris is unreachable and the report says so; --source zetaris stops with an error instead.",
+      "limits": "The three sources are our own case files (some synthetic, labelled) served to Zetaris as REST tables; Zetaris is not connected to a real company's systems. The agents are unchanged; Zetaris replaces the file read, it does not add new reasoning. NVD for the 17 cases comes through the same server, not live from NVD (the live NVD mode --cve is separate)."
+    }
+  },
+  "team_name": "The Revolutionists",
+  "team_members": [
+    "Max (nullstar)"
+  ],
+  "primary_llm_provider_used_for_this_submission": "ollama (local, free, no API key - see README for how to switch)",
+  "license": "MIT (code by nullstarr); bundled Meterless engine: Apache-2.0"
+}

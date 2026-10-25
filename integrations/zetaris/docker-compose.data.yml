@@ -1,0 +1,17 @@
+# Serves our three sources to Zetaris. Start AFTER Zetaris is up (it joins Zetaris' Docker network):
+#   docker compose -f integrations/zetaris/docker-compose.data.yml up -d
+services:
+  vulndata:
+    image: python:3.12-slim
+    container_name: vulndata
+    working_dir: /app
+    command: ["python", "integrations/zetaris/data_server.py"]
+    environment:
+      APP_ROOT: /app
+    volumes:
+      - ../../:/app:ro
+    networks:
+      - zetaris_default
+networks:
+  zetaris_default:
+    external: true

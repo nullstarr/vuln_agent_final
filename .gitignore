@@ -1,0 +1,15 @@
+.env
+__pycache__/
+*.pyc
+logs/*.jsonl
+logs/source_availability_history.json
+video/build/
+*.mp4
+!submission/Demo_Video.mp4
+
+# erzeugte Ausgaben nie einchecken (liegen nach jedem Lauf in logs/, teils als root von Docker)
+logs/*
+!logs/.gitkeep
+narration/voice_samples/
+narration/_probe.*
+evaluation/result_*.txt

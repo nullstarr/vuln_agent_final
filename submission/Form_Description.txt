@@ -1,0 +1,11 @@
+Vendors, public databases and internal tickets often disagree on whether a vulnerability is "fixed". In 2017 a known Struts fix existed for months, yet Equifax lost data on about 147 million people through one unpatched system. The Vulnerability Conflict Resolver reads the three sources for a CVE, decides whether it is really resolved, and explains why.
+
+Four agents (SourceMapper, Reconciler, ChallengeAgent, Reporter); the ChallengeAgent can reject a draft. Log4Shell: the vendor says the risky feature is off by default, but the internal ticket shows two of four clusters unconfirmed. The draft is rejected; the answer becomes "unresolved". Each report ends with what would resolve the case and an evidence trail. Known exploitation raises urgency, never the verdict.
+
+Zetaris is the data layer: the sources are REST tables joined by a SQL view; the tool reads cases with SQL (--source zetaris). Checked live: 17 cases, same results as from files.
+
+Meterless: the unmodified World Model engine runs through a Node bridge; its conflict policy (internal ticket > NVD > vendor) picks the winner and feeds the audit trail. A Meterless Runtime provider exists but was tested only against a stand-in: Nightshift has no Linux x86_64 build.
+
+NVIDIA: Nemotron 3.5 lightning, called directly (not via Nightshift), judges how certain a statement is. Two runs on our corpus: test half 2 of 56 hedges missed, 0 of 86 false alarms. On 24 real advisory sentences (author-labelled) it rated 14 of 17 clear ones uncertain: the corpus result does not carry over.
+
+Limits: tickets are simulated, the corpus is our own, no users yet. Rules stay brittle. Cursor was used only for brainstorming; the code was written with Claude.

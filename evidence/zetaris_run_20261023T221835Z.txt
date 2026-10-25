@@ -1,0 +1,66 @@
+[mode] ollama (from environment variable LLM_PROVIDER)  <- AI mode; add --provider rule_based to run without AI
+[data] 1 case(s) read from Zetaris (SQL view vuln.signals).
+[2026-10-23T22:18:36.389441+00:00]     SourceMapper | data_layer             -> Reconciler       | status=ok conf=None retries=0
+    in:  case CVE-2021-44228
+    out: Zetaris: sources read with SQL from view vuln.signals
+
+======================================================================
+CASE: CVE-2021-44228 (Log4Shell)
+======================================================================
+[2026-10-23T22:18:38.304569+00:00]     SourceMapper | map_sources            -> Reconciler       | status=ok conf=None retries=0
+    in:  3 raw sources for CVE-2021-44228
+    out: 3 normalised claims; certainty={'nvd': 'high (llm)', 'vendor_changelog': 'low (llm)', 'internal_ticket': 'low (llm+keyword agree)'}
+[2026-10-23T22:18:38.378035+00:00]     SourceMapper | build_world_model (Meterless schema) -> Reconciler       | status=ok conf=None retries=0
+    in:  3 claims for CVE-2021-44228
+    out: 4 Entities, 3 Edges (2 davon mit confidence<0.5) -> logs/CVE-2021-44228_world_model.json
+[2026-10-23T22:18:38.378086+00:00]     SourceMapper | meterless_engine       -> Reconciler       | status=ok conf=None retries=0
+    in:  3 claims as facts/relations for CVE-2021-44228
+    out: Meterless engine on node v24.19.0: 'remediation_status': internal_ticket wins over vendor_changelog (conflict policy source-priority); id parity 4/4; 24 events
+[2026-10-23T22:18:38.378557+00:00]       Reconciler | build_draft (vendor-only, optimistic) -> ChallengeAgent   | status=ok conf=None retries=0
+    in:  vendor claim for CVE-2021-44228: 'v2.14.1-internal-3: Disabled JNDI message lookups by default at startu...'
+    out: resolved=True, severity=downgraded (per vendor default)
+[2026-10-23T22:18:38.378694+00:00]   ChallengeAgent | reject (internal evidence insufficient) -> Reconciler       | status=rejected conf=None retries=0
+    in:  draft resolved=True on vendor text alone for CVE-2021-44228
+    out: Resolution relies only on the vendor changelog. The internal ticket is not certain: '...age hardening; lookup setting on those two clusters is unconfirmed as of this ticket.' - it does not confirm the vendor's claim holds here. Re-run incorporating the internal ticket; do not resolve on vendor text alone.
+[2026-10-23T22:18:38.378734+00:00]       Reconciler | revise_draft (incorporating internal ticket) -> ChallengeAgent   | status=ok conf=None retries=1
+    in:  critique received: Resolution relies only on the vendor changelog. The internal ticket is not certain: '...age hardening; lookup setting on those two clusters is unconfirmed as of this ticket.' - it does not confirm the vendor's claim holds here. Re-run incorporating the internal ticket; do not resolve on vendor text alone.
+    out: resolved=False, severity=CRITICAL - NOT downgraded, internal evidence insufficient
+[2026-10-23T22:18:38.378762+00:00]   ChallengeAgent | approve (nothing to challenge) -> Reporter         | status=approved conf=None retries=0
+    in:  Reconciler's first draft already did not claim resolution
+    out: Confirmed unresolved - flag for human review
+[2026-10-23T22:18:40.709877+00:00]         Reporter | write_report (llm)     -> -                | status=ok conf=low - unresolved, human review required retries=0
+    in:  final decision for CVE-2021-44228: resolved=False
+    out: Security Report: CVE-2021-44228  Summary: The vulnerability CVE-2021-44228 is currently unresolved, with a final severit...
+
+--- REPORT ---
+Security Report: CVE-2021-44228
+
+Summary:
+The vulnerability CVE-2021-44228 is currently unresolved, with a final severity of CRITICAL. The vendor evidence indicates that disabled JNDI message lookups by default at startup via log4j2.formatMsgNoLookups=true, set in the base container image since the October hardening pass. This setting is not overridden by default, making applications not affected by remote lookup substitution.
+
+Internal Evidence:
+Internal ticketing system reveals that prod-cluster-3 and prod-cluster-4 are running the hardened base image with formatMsgNoLookups=true, confirmed via environment dump. However, prod-cluster-1 and prod-cluster-2 were migrated to a customer-managed image in October, and the lookup setting on these clusters is unconfirmed as of this ticket.
+
+Recommendation:
+Due to the unresolved status and low confidence, human review is required to verify the vulnerability's impact on the affected clusters. Further investigation is necessary to confirm the vulnerability's presence and severity on prod-cluster-1 and prod-cluster-2.
+
+--- WHAT WOULD RESOLVE THIS ---
+1. Internal: the text itself says something is unconfirmed ('...age hardening; lookup setting on those two clusters is unconfirmed as of this ticket.'). Verify that item directly.
+2. Vendor: the assessment flagged doubt (The text only confirms the state of the system as of the October hardening pass, without indicating whether the change is still in effect ). Resolve it and record the evidence.
+--- EVIDENCE TRAIL (Meterless World Model) ---
+Baseline: CRITICAL (from NVD (National Vulnerability Database)).
+Remediation belief taken from: Ticket OPS-4821, filed 2021-12-10 (observed 2026-10-24, run run_c22f39ffba9a).
+  - Checked prod-cluster-3 and prod-cluster-4 following the Log4j advisory. Both are runnin...
+  superseded: Internal fork changelog, entry from 2021-11-02 - v2.14.1-internal-3: Disabled JNDI message lookups by default at startup via log4j2.form...
+Policy: source-priority (internal_ticket > nvd > vendor_changelog). Record: 24 events, 21 audit entries (full log: logs/CVE-2021-44228_meterless.jsonl).
+
+--- DATA LAYER ---
+Zetaris: sources read with SQL from view vuln.signals
+
+--- MODE: AI-assisted (ollama:llama3:latest) ---
+Catches unusual hedge wording the rules miss (test half: 3 of 56 missed), but flags some clear
+statements as uncertain (9-10 of 86) - more cases go to human review. Rule-based mode (--provider rule_based) is deterministic and
+quiet. See SETUP.md.
+
+
+1 case(s) processed. Logs are in logs/.

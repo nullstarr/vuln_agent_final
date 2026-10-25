@@ -1,0 +1,17 @@
+[prompt] CERTAINTY_PROMPT=v2 (applies only to the methods llm and combined)
+[rules] 24 texts in 0.0s
+[llm] 24 texts in 44.5s
+[combined] 24 texts in 0.0s
+
+==============================================================================
+Method   half    correct    MISSED (dangerous)       FALSE ALARM
+------------------------------------------------------------------------------
+rules     test         66.7%                7/7 = 100.0%   1/17 =   5.9%
+llm       test         41.7%                0/7 =   0.0%  14/17 =  82.4%
+combined  test         41.7%                0/7 =   0.0%  14/17 =  82.4%
+==============================================================================
+
+By error type (share classified WRONG; lower is better)
+Category                 target        rules/test        llm/test   combined/test
+external_low              low                7/7             0/7             0/7
+external_high             high              1/17           14/17           14/17

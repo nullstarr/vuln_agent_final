@@ -1,0 +1,1110 @@
+[mode] rule_based (from --provider)  <- no AI; add --provider ollama for the AI mode
+[data] 14 case(s) read from Zetaris (SQL view vuln.signals).
+[2026-10-24T18:28:33.972684+00:00]     SourceMapper | data_layer             -> Reconciler       | status=ok conf=None retries=0
+    in:  case CVE-2014-0160
+    out: Zetaris: SQL on Zetaris view vuln.signals (LEFT JOIN of three views over REST tables):
+  nvd_*     <- vuln.nvd_entries     <- REST /nvd     (NVD entry)
+  vendor_*  <- vuln.vendor_entries  <- REST /vendor  (vendor changelog)
+  ticket_*  <- vuln.ticket_entries  <- REST /tickets (internal ticket)
+  SELECT 25 columns FROM vuln.signals WHERE cve_id IN ('CVE-2014-0160') ORDER BY cve_id
+  A source whose columns are NULL is treated as absent (not as empty).
+  Second query: exploitation signal from vuln.exploit_entries <- REST /exploitation (no row = unknown, not 'safe').
+
+======================================================================
+CASE: CVE-2014-0160 (Heartbleed (real CVE) - patched everywhere, but keys not yet re-issued)
+======================================================================
+[2026-10-24T18:28:33.973021+00:00]     SourceMapper | map_sources            -> Reconciler       | status=ok conf=None retries=0
+    in:  3 raw sources for CVE-2014-0160
+    out: 3 normalised claims; certainty={'nvd': 'high (keyword-fallback)', 'vendor_changelog': 'high (keyword-fallback)', 'internal_ticket': 'low (implicit-hedge-override)'}
+[2026-10-24T18:28:34.030085+00:00]     SourceMapper | build_world_model (Meterless schema) -> Reconciler       | status=ok conf=None retries=0
+    in:  3 claims for CVE-2014-0160
+    out: 4 Entities, 3 Edges (1 davon mit confidence<0.5) -> logs/CVE-2014-0160_world_model.json
+[2026-10-24T18:28:34.030142+00:00]     SourceMapper | meterless_engine       -> Reconciler       | status=ok conf=None retries=0
+    in:  3 claims as facts/relations for CVE-2014-0160
+    out: Meterless engine on node v24.19.0: 'remediation_status': internal_ticket wins over vendor_changelog, vendor_changelog (conflict policy source-priority); id parity 4/4; 25 events
+[2026-10-24T18:28:34.031655+00:00]       Reconciler | build_draft (vendor-only, optimistic) -> ChallengeAgent   | status=ok conf=None retries=0
+    in:  vendor claim for CVE-2014-0160: 'Fixed in OpenSSL 1.0.1g. Users of OpenSSL 1.0.1 through 1.0.1f should ...'
+    out: resolved=True, severity=downgraded (per vendor fix announcement)
+[2026-10-24T18:28:34.031781+00:00]   ChallengeAgent | reject (internal evidence insufficient) -> Reconciler       | status=rejected conf=None retries=0
+    in:  draft resolved=True on vendor text alone for CVE-2014-0160
+    out: Resolution relies only on the vendor changelog. The internal ticket is not certain: 'The private keys and certificates of 31 servers have been re-issued; re-issuing the remaining 9 is scheduled for next week.' - it does not confirm the vendor's claim holds here. Re-run incorporating the internal ticket; do not resolve on vendor text alone.
+[2026-10-24T18:28:34.031824+00:00]       Reconciler | revise_draft (incorporating internal ticket) -> ChallengeAgent   | status=ok conf=None retries=1
+    in:  critique received: Resolution relies only on the vendor changelog. The internal ticket is not certain: 'The private keys and certificates of 31 servers have been re-issued; re-issuing the remaining 9 is scheduled for next week.' - it does not confirm the vendor's claim holds here. Re-run incorporating the internal ticket; do not resolve on vendor text alone.
+    out: resolved=False, severity=HIGH - NOT downgraded, internal evidence insufficient
+[2026-10-24T18:28:34.031851+00:00]   ChallengeAgent | approve (nothing to challenge) -> Reporter         | status=approved conf=None retries=0
+    in:  Reconciler's first draft already did not claim resolution
+    out: Confirmed unresolved - flag for human review
+[2026-10-24T18:28:34.031890+00:00]         Reporter | write_report (sample-mode template) -> -                | status=ok conf=low - unresolved, human review required retries=0
+    in:  final decision for CVE-2014-0160: resolved=False
+    out: CVE: CVE-2014-0160 NVD baseline: HIGH (CVSS 7.5) Final assessment: HIGH - NOT downgraded, internal evidence insufficient...
+
+--- REPORT ---
+CVE: CVE-2014-0160
+NVD baseline: HIGH (CVSS 7.5)
+Final assessment: HIGH - NOT downgraded, internal evidence insufficient
+Confidence: low - unresolved, human review required
+Revisions during review: 1
+
+Evidence path:
+  - NVD: The TLS and DTLS implementations in OpenSSL 1.0.1 before 1.0.1g do not properly handle Heartbeat Extension packets, which allows remote attackers to obtain sensitive information from process memory vi
+  - Vendor changelog: Fixed in OpenSSL 1.0.1g. Users of OpenSSL 1.0.1 through 1.0.1f should upgrade to 1.0.1g immediately.
+  - Internal ticket: All 40 TLS-terminating servers were upgraded to OpenSSL 1.0.1g and verified with a Heartbleed probe on 2026-10-24. The private keys and certificates of 31 servers have been re-issued; re-issuing the remaining 9 is scheduled for next week.
+
+Conclusion: NOT resolved. The evidence does not show that the issue is fixed or safe in this environment; the section 'What would resolve this' names what is missing. Treat it as unresolved, and do not downgrade urgency, until a person has verified it.
+
+--- WHAT WOULD RESOLVE THIS ---
+1. Internal: work is still pending ('The private keys and certificates of 31 servers have been re-issued; re-issuing the remaining 9 is scheduled for next week.'). Complete it, re-verify, and update the record.
+--- EVIDENCE TRAIL (Meterless World Model) ---
+Baseline: HIGH (from NVD (National Vulnerability Database)).
+Remediation belief taken from: Ticket OPS-2014-04 (synthetic) (observed 2026-10-24, run run_b5d6aa9e0279).
+  - All 40 TLS-terminating servers were upgraded to OpenSSL 1.0.1g and verified with a Hear...
+  superseded: OpenSSL security advisory (paraphrased) - Fixed in OpenSSL 1.0.1g. Users of OpenSSL 1.0.1 through 1.0.1f should upgrade to 1.0.1g...
+  superseded: OpenSSL security advisory (paraphrased) - Fixed in OpenSSL 1.0.1g. Users of OpenSSL 1.0.1 through 1.0.1f should upgrade to 1.0.1g...
+Policy: source-priority (internal_ticket > nvd > vendor_changelog). Record: 25 events, 24 audit entries (full log: logs/CVE-2014-0160_meterless.jsonl).
+
+--- EXPLOITATION SIGNAL ---
+KNOWN TO BE EXPLOITED  [public data; source: CISA Known Exploited Vulnerabilities catalog]
+CVE-2014-0160 (Heartbleed) is listed in the CISA Known Exploited Vulnerabilities catalog.
+Note: Recorded from the public catalog listing; the listing date was not recorded here. Verify at cisa.gov before relying on it.
+This changes the urgency and the triage order, not the verdict: whether it is fixed is decided by the evidence above.
+
+--- DATA LAYER ---
+Zetaris: SQL on Zetaris view vuln.signals (LEFT JOIN of three views over REST tables):
+  nvd_*     <- vuln.nvd_entries     <- REST /nvd     (NVD entry)
+  vendor_*  <- vuln.vendor_entries  <- REST /vendor  (vendor changelog)
+  ticket_*  <- vuln.ticket_entries  <- REST /tickets (internal ticket)
+  SELECT 25 columns FROM vuln.signals WHERE cve_id IN ('CVE-2014-0160') ORDER BY cve_id
+  A source whose columns are NULL is treated as absent (not as empty).
+  Second query: exploitation signal from vuln.exploit_entries <- REST /exploitation (no row = unknown, not 'safe').
+
+--- MODE: rule-based (no AI model) ---
+Deterministic and quiet: no false alarms in our test set, but it misses hedges worded in ways
+its rules do not know. An AI mode exists (--provider ollama): on our test half it caught 53 of 56
+unusual hedges (rules: 1) but wrongly flagged 9-10 of 86 clear statements as uncertain. See SETUP.md.
+
+[2026-10-24T18:28:34.032552+00:00]     SourceMapper | data_layer             -> Reconciler       | status=ok conf=None retries=0
+    in:  case CVE-2017-5638
+    out: Zetaris: SQL on Zetaris view vuln.signals (LEFT JOIN of three views over REST tables):
+  nvd_*     <- vuln.nvd_entries     <- REST /nvd     (NVD entry)
+  vendor_*  <- vuln.vendor_entries  <- REST /vendor  (vendor changelog)
+  ticket_*  <- vuln.ticket_entries  <- REST /tickets (internal ticket)
+  SELECT 25 columns FROM vuln.signals WHERE cve_id IN ('CVE-2017-5638') ORDER BY cve_id
+  A source whose columns are NULL is treated as absent (not as empty).
+  Second query: exploitation signal from vuln.exploit_entries <- REST /exploitation (no row = unknown, not 'safe').
+
+======================================================================
+CASE: CVE-2017-5638 (Apache Struts RCE - the flaw behind the 2017 Equifax breach (147M records))
+======================================================================
+[2026-10-24T18:28:34.032742+00:00]     SourceMapper | map_sources            -> Reconciler       | status=ok conf=None retries=0
+    in:  3 raw sources for CVE-2017-5638
+    out: 3 normalised claims; certainty={'nvd': 'high (keyword-fallback)', 'vendor_changelog': 'high (keyword-fallback)', 'internal_ticket': 'low (keyword-fallback)'}
+[2026-10-24T18:28:34.084226+00:00]     SourceMapper | build_world_model (Meterless schema) -> Reconciler       | status=ok conf=None retries=0
+    in:  3 claims for CVE-2017-5638
+    out: 4 Entities, 3 Edges (1 davon mit confidence<0.5) -> logs/CVE-2017-5638_world_model.json
+[2026-10-24T18:28:34.084275+00:00]     SourceMapper | meterless_engine       -> Reconciler       | status=ok conf=None retries=0
+    in:  3 claims as facts/relations for CVE-2017-5638
+    out: Meterless engine on node v24.19.0: 'remediation_status': internal_ticket wins over vendor_changelog, vendor_changelog (conflict policy source-priority); id parity 4/4; 25 events
+[2026-10-24T18:28:34.085237+00:00]       Reconciler | build_draft (vendor-only, optimistic) -> ChallengeAgent   | status=ok conf=None retries=0
+    in:  vendor claim for CVE-2017-5638: 'Upgrade to Struts 2.3.32 or 2.5.10.1 immediately. There is no configur...'
+    out: resolved=True, severity=downgraded (per vendor fix announcement)
+[2026-10-24T18:28:34.085288+00:00]   ChallengeAgent | reject (internal evidence insufficient) -> Reconciler       | status=rejected conf=None retries=0
+    in:  draft resolved=True on vendor text alone for CVE-2017-5638
+    out: Resolution relies only on the vendor changelog. The internal ticket is not certain: '...missioning in Q1 and excluded from the upgrade sprint; no one has confirmed whether it was later included in a follow-up pass, and...' - it does not confirm the vendor's claim holds here. Re-run incorporating the internal ticket; do not resolve on vendor text alone.
+[2026-10-24T18:28:34.085319+00:00]       Reconciler | revise_draft (incorporating internal ticket) -> ChallengeAgent   | status=ok conf=None retries=1
+    in:  critique received: Resolution relies only on the vendor changelog. The internal ticket is not certain: '...missioning in Q1 and excluded from the upgrade sprint; no one has confirmed whether it was later included in a follow-up pass, and...' - it does not confirm the vendor's claim holds here. Re-run incorporating the internal ticket; do not resolve on vendor text alone.
+    out: resolved=False, severity=CRITICAL - NOT downgraded, internal evidence insufficient
+[2026-10-24T18:28:34.085341+00:00]   ChallengeAgent | approve (nothing to challenge) -> Reporter         | status=approved conf=None retries=0
+    in:  Reconciler's first draft already did not claim resolution
+    out: Confirmed unresolved - flag for human review
+[2026-10-24T18:28:34.085378+00:00]         Reporter | write_report (sample-mode template) -> -                | status=ok conf=low - unresolved, human review required retries=0
+    in:  final decision for CVE-2017-5638: resolved=False
+    out: CVE: CVE-2017-5638 NVD baseline: CRITICAL (CVSS 9.8) Final assessment: CRITICAL - NOT downgraded, internal evidence insu...
+
+--- REPORT ---
+CVE: CVE-2017-5638
+NVD baseline: CRITICAL (CVSS 9.8)
+Final assessment: CRITICAL - NOT downgraded, internal evidence insufficient
+Confidence: low - unresolved, human review required
+Revisions during review: 1
+
+Evidence path:
+  - NVD: The Jakarta Multipart parser in Apache Struts 2 has incorrect exception handling and error-message generation during file-upload attempts, allowing a remote attacker to execute arbitrary commands via 
+  - Vendor changelog: Upgrade to Struts 2.3.32 or 2.5.10.1 immediately. There is no configuration workaround for this vulnerability - disabling the Jakarta-based file upload interceptor is the only partial mitigation short of upgrading, and does not fully close the flaw.
+  - Internal ticket: Dependency scan across all 14 customer-facing applications: 13 are confirmed on struts-core 2.5.16 or later. The customer dispute-portal application was flagged for decommissioning in Q1 and excluded from the upgrade sprint; no one has confirmed whether it was later included in a follow-up pass, and its retirement ticket has no target date.
+
+Conclusion: NOT resolved. The evidence does not show that the issue is fixed or safe in this environment; the section 'What would resolve this' names what is missing. Treat it as unresolved, and do not downgrade urgency, until a person has verified it.
+
+--- WHAT WOULD RESOLVE THIS ---
+1. Internal: the text itself says something is unconfirmed ('...missioning in Q1 and excluded from the upgrade sprint; no one has confirmed whether it was later included in a follow-up pass, and...'). Verify that item directly.
+--- EVIDENCE TRAIL (Meterless World Model) ---
+Baseline: CRITICAL (from NVD (National Vulnerability Database)).
+Remediation belief taken from: Ticket OPS-3390 (synthetic) (observed 2026-10-24, run run_be6e22eb0936).
+  - Dependency scan across all 14 customer-facing applications: 13 are confirmed on struts-...
+  superseded: Apache Struts security advisory S2-045 (real advisory, paraphrased) - Upgrade to Struts 2.3.32 or 2.5.10.1 immediately. There is no configuration workaround ...
+  superseded: Apache Struts security advisory S2-045 (real advisory, paraphrased) - Upgrade to Struts 2.3.32 or 2.5.10.1 immediately. There is no configuration workaround ...
+Policy: source-priority (internal_ticket > nvd > vendor_changelog). Record: 25 events, 23 audit entries (full log: logs/CVE-2017-5638_meterless.jsonl).
+
+--- EXPLOITATION SIGNAL ---
+KNOWN TO BE EXPLOITED  [public data; source: CISA Known Exploited Vulnerabilities catalog]
+CVE-2017-5638 (Apache Struts) is listed in the CISA Known Exploited Vulnerabilities catalog.
+Note: Recorded from the public catalog listing; the listing date was not recorded here. Verify at cisa.gov before relying on it.
+This changes the urgency and the triage order, not the verdict: whether it is fixed is decided by the evidence above.
+
+--- DATA LAYER ---
+Zetaris: SQL on Zetaris view vuln.signals (LEFT JOIN of three views over REST tables):
+  nvd_*     <- vuln.nvd_entries     <- REST /nvd     (NVD entry)
+  vendor_*  <- vuln.vendor_entries  <- REST /vendor  (vendor changelog)
+  ticket_*  <- vuln.ticket_entries  <- REST /tickets (internal ticket)
+  SELECT 25 columns FROM vuln.signals WHERE cve_id IN ('CVE-2017-5638') ORDER BY cve_id
+  A source whose columns are NULL is treated as absent (not as empty).
+  Second query: exploitation signal from vuln.exploit_entries <- REST /exploitation (no row = unknown, not 'safe').
+
+--- MODE: rule-based (no AI model) ---
+Deterministic and quiet: no false alarms in our test set, but it misses hedges worded in ways
+its rules do not know. An AI mode exists (--provider ollama): on our test half it caught 53 of 56
+unusual hedges (rules: 1) but wrongly flagged 9-10 of 86 clear statements as uncertain. See SETUP.md.
+
+[2026-10-24T18:28:34.086000+00:00]     SourceMapper | data_layer             -> Reconciler       | status=ok conf=None retries=0
+    in:  case CVE-2021-44228
+    out: Zetaris: SQL on Zetaris view vuln.signals (LEFT JOIN of three views over REST tables):
+  nvd_*     <- vuln.nvd_entries     <- REST /nvd     (NVD entry)
+  vendor_*  <- vuln.vendor_entries  <- REST /vendor  (vendor changelog)
+  ticket_*  <- vuln.ticket_entries  <- REST /tickets (internal ticket)
+  SELECT 25 columns FROM vuln.signals WHERE cve_id IN ('CVE-2021-44228') ORDER BY cve_id
+  A source whose columns are NULL is treated as absent (not as empty).
+  Second query: exploitation signal from vuln.exploit_entries <- REST /exploitation (no row = unknown, not 'safe').
+
+======================================================================
+CASE: CVE-2021-44228 (Log4Shell)
+======================================================================
+[2026-10-24T18:28:34.086187+00:00]     SourceMapper | map_sources            -> Reconciler       | status=ok conf=None retries=0
+    in:  3 raw sources for CVE-2021-44228
+    out: 3 normalised claims; certainty={'nvd': 'high (keyword-fallback)', 'vendor_changelog': 'low (implicit-hedge-override)', 'internal_ticket': 'low (keyword-fallback)'}
+[2026-10-24T18:28:34.135478+00:00]     SourceMapper | build_world_model (Meterless schema) -> Reconciler       | status=ok conf=None retries=0
+    in:  3 claims for CVE-2021-44228
+    out: 4 Entities, 3 Edges (2 davon mit confidence<0.5) -> logs/CVE-2021-44228_world_model.json
+[2026-10-24T18:28:34.135522+00:00]     SourceMapper | meterless_engine       -> Reconciler       | status=ok conf=None retries=0
+    in:  3 claims as facts/relations for CVE-2021-44228
+    out: Meterless engine on node v24.19.0: 'remediation_status': internal_ticket wins over vendor_changelog (conflict policy source-priority); id parity 4/4; 24 events
+[2026-10-24T18:28:34.136497+00:00]       Reconciler | build_draft (vendor-only, optimistic) -> ChallengeAgent   | status=ok conf=None retries=0
+    in:  vendor claim for CVE-2021-44228: 'v2.14.1-internal-3: Disabled JNDI message lookups by default at startu...'
+    out: resolved=True, severity=downgraded (per vendor default)
+[2026-10-24T18:28:34.136553+00:00]   ChallengeAgent | reject (internal evidence insufficient) -> Reconciler       | status=rejected conf=None retries=0
+    in:  draft resolved=True on vendor text alone for CVE-2021-44228
+    out: Resolution relies only on the vendor changelog. The internal ticket is not certain: '...age hardening; lookup setting on those two clusters is unconfirmed as of this ticket.' - it does not confirm the vendor's claim holds here. Re-run incorporating the internal ticket; do not resolve on vendor text alone.
+[2026-10-24T18:28:34.136581+00:00]       Reconciler | revise_draft (incorporating internal ticket) -> ChallengeAgent   | status=ok conf=None retries=1
+    in:  critique received: Resolution relies only on the vendor changelog. The internal ticket is not certain: '...age hardening; lookup setting on those two clusters is unconfirmed as of this ticket.' - it does not confirm the vendor's claim holds here. Re-run incorporating the internal ticket; do not resolve on vendor text alone.
+    out: resolved=False, severity=CRITICAL - NOT downgraded, internal evidence insufficient
+[2026-10-24T18:28:34.136603+00:00]   ChallengeAgent | approve (nothing to challenge) -> Reporter         | status=approved conf=None retries=0
+    in:  Reconciler's first draft already did not claim resolution
+    out: Confirmed unresolved - flag for human review
+[2026-10-24T18:28:34.136637+00:00]         Reporter | write_report (sample-mode template) -> -                | status=ok conf=low - unresolved, human review required retries=0
+    in:  final decision for CVE-2021-44228: resolved=False
+    out: CVE: CVE-2021-44228 NVD baseline: CRITICAL (CVSS 10.0) Final assessment: CRITICAL - NOT downgraded, internal evidence in...
+
+--- REPORT ---
+CVE: CVE-2021-44228
+NVD baseline: CRITICAL (CVSS 10.0)
+Final assessment: CRITICAL - NOT downgraded, internal evidence insufficient
+Confidence: low - unresolved, human review required
+Revisions during review: 1
+
+Evidence path:
+  - NVD: Apache Log4j2 JNDI features used in configuration, log messages, and parameters do not protect against attacker-controlled LDAP and other JNDI related endpoints. An attacker who can control log messag
+  - Vendor changelog: v2.14.1-internal-3: Disabled JNDI message lookups by default at startup via log4j2.formatMsgNoLookups=true, set in our base container image since the October hardening pass. Applications that do not override this system property are not affected by remote lookup substitution.
+  - Internal ticket: Checked prod-cluster-3 and prod-cluster-4 following the Log4j advisory. Both are running the hardened base image with formatMsgNoLookups=true confirmed via env dump. prod-cluster-1 and prod-cluster-2 were migrated to a customer-managed image in October per MIGRATION-217 and do not inherit our base image hardening; lookup setting on those two clusters is unconfirmed as of this ticket.
+
+Conclusion: NOT resolved. The evidence does not show that the issue is fixed or safe in this environment; the section 'What would resolve this' names what is missing. Treat it as unresolved, and do not downgrade urgency, until a person has verified it.
+
+--- WHAT WOULD RESOLVE THIS ---
+1. Internal: the text itself says something is unconfirmed ('...age hardening; lookup setting on those two clusters is unconfirmed as of this ticket.'). Verify that item directly.
+2. Vendor: it carries an exception ('Applications that do not override this system property are not affected by remote lookup substitution.'). Confirm the exception does not apply to our systems.
+--- EVIDENCE TRAIL (Meterless World Model) ---
+Baseline: CRITICAL (from NVD (National Vulnerability Database)).
+Remediation belief taken from: Ticket OPS-4821, filed 2021-12-10 (observed 2026-10-24, run run_c22f39ffba9a).
+  - Checked prod-cluster-3 and prod-cluster-4 following the Log4j advisory. Both are runnin...
+  superseded: Internal fork changelog, entry from 2021-11-02 - v2.14.1-internal-3: Disabled JNDI message lookups by default at startup via log4j2.form...
+Policy: source-priority (internal_ticket > nvd > vendor_changelog). Record: 24 events, 30 audit entries (full log: logs/CVE-2021-44228_meterless.jsonl).
+
+--- EXPLOITATION SIGNAL ---
+KNOWN TO BE EXPLOITED  [public data; source: CISA Known Exploited Vulnerabilities catalog]
+CVE-2021-44228 (Log4Shell) is listed in the CISA Known Exploited Vulnerabilities catalog.
+Note: Recorded from the public catalog listing; the listing date was not recorded here. Verify at cisa.gov before relying on it.
+This changes the urgency and the triage order, not the verdict: whether it is fixed is decided by the evidence above.
+
+--- DATA LAYER ---
+Zetaris: SQL on Zetaris view vuln.signals (LEFT JOIN of three views over REST tables):
+  nvd_*     <- vuln.nvd_entries     <- REST /nvd     (NVD entry)
+  vendor_*  <- vuln.vendor_entries  <- REST /vendor  (vendor changelog)
+  ticket_*  <- vuln.ticket_entries  <- REST /tickets (internal ticket)
+  SELECT 25 columns FROM vuln.signals WHERE cve_id IN ('CVE-2021-44228') ORDER BY cve_id
+  A source whose columns are NULL is treated as absent (not as empty).
+  Second query: exploitation signal from vuln.exploit_entries <- REST /exploitation (no row = unknown, not 'safe').
+
+--- MODE: rule-based (no AI model) ---
+Deterministic and quiet: no false alarms in our test set, but it misses hedges worded in ways
+its rules do not know. An AI mode exists (--provider ollama): on our test half it caught 53 of 56
+unusual hedges (rules: 1) but wrongly flagged 9-10 of 86 clear statements as uncertain. See SETUP.md.
+
+[2026-10-24T18:28:34.137240+00:00]     SourceMapper | data_layer             -> Reconciler       | status=ok conf=None retries=0
+    in:  case CVE-2022-22965
+    out: Zetaris: SQL on Zetaris view vuln.signals (LEFT JOIN of three views over REST tables):
+  nvd_*     <- vuln.nvd_entries     <- REST /nvd     (NVD entry)
+  vendor_*  <- vuln.vendor_entries  <- REST /vendor  (vendor changelog)
+  ticket_*  <- vuln.ticket_entries  <- REST /tickets (internal ticket)
+  SELECT 25 columns FROM vuln.signals WHERE cve_id IN ('CVE-2022-22965') ORDER BY cve_id
+  A source whose columns are NULL is treated as absent (not as empty).
+  Second query: exploitation signal from vuln.exploit_entries <- REST /exploitation (no row = unknown, not 'safe').
+
+======================================================================
+CASE: CVE-2022-22965 (Spring4Shell (real CVE) - fix released, internal verification complete)
+======================================================================
+[2026-10-24T18:28:34.137431+00:00]     SourceMapper | map_sources            -> Reconciler       | status=ok conf=None retries=0
+    in:  3 raw sources for CVE-2022-22965
+    out: 3 normalised claims; certainty={'nvd': 'high (keyword-fallback)', 'vendor_changelog': 'high (keyword-fallback)', 'internal_ticket': 'high (keyword-fallback)'}
+[2026-10-24T18:28:34.189226+00:00]     SourceMapper | build_world_model (Meterless schema) -> Reconciler       | status=ok conf=None retries=0
+    in:  3 claims for CVE-2022-22965
+    out: 4 Entities, 3 Edges (0 davon mit confidence<0.5) -> logs/CVE-2022-22965_world_model.json
+[2026-10-24T18:28:34.189280+00:00]     SourceMapper | meterless_engine       -> Reconciler       | status=ok conf=None retries=0
+    in:  3 claims as facts/relations for CVE-2022-22965
+    out: Meterless engine on node v24.19.0: 'remediation_status': internal_ticket wins over vendor_changelog, vendor_changelog (conflict policy source-priority); id parity 4/4; 25 events
+[2026-10-24T18:28:34.190257+00:00]       Reconciler | build_draft (vendor-only, optimistic) -> ChallengeAgent   | status=ok conf=None retries=0
+    in:  vendor claim for CVE-2022-22965: 'Spring Framework 5.3.18 and 5.2.20 are available and fix this vulnerab...'
+    out: resolved=True, severity=downgraded (per vendor fix announcement)
+[2026-10-24T18:28:34.190510+00:00]   ChallengeAgent | approve (internal ticket independently confirms) -> Reporter         | status=approved conf=None retries=0
+    in:  internal ticket certainty=high, text: 'Inventory run on 2026-10-24 across all 9 Java services: 7 were already on Spring Framework...'
+    out: Vendor claim independently confirmed by internal evidence - resolved
+[2026-10-24T18:28:34.190561+00:00]         Reporter | write_report (sample-mode template) -> -                | status=ok conf=high retries=0
+    in:  final decision for CVE-2022-22965: resolved=True
+    out: CVE: CVE-2022-22965 NVD baseline: CRITICAL (CVSS 9.8) Final assessment: downgraded (vendor fix confirmed deployed by int...
+
+--- REPORT ---
+CVE: CVE-2022-22965
+NVD baseline: CRITICAL (CVSS 9.8)
+Final assessment: downgraded (vendor fix confirmed deployed by internal check)
+Confidence: high
+Revisions during review: 0
+
+Evidence path:
+  - NVD: A Spring MVC or Spring WebFlux application running on JDK 9+ may be vulnerable to remote code execution (RCE) via data binding. The specific exploit requires the application to run on Tomcat as a WAR 
+  - Vendor changelog: Spring Framework 5.3.18 and 5.2.20 are available and fix this vulnerability. Users of affected versions should upgrade to 5.3.18 or 5.2.20.
+  - Internal ticket: Inventory run on 2026-10-24 across all 9 Java services: 7 were already on Spring Framework 5.3.18 or later; the 2 legacy reporting services on 5.2.x were upgraded to 5.2.20 on 2026-10-24 and re-tested with the public proof of concept. All 9 now run a fixed version and the proof of concept fails on every one. No exceptions.
+
+Conclusion: the vendor's stated default is independently confirmed by the internal ticket. Downgrade accepted.
+--- EVIDENCE TRAIL (Meterless World Model) ---
+Baseline: CRITICAL (from NVD (National Vulnerability Database)).
+Remediation belief taken from: Ticket OPS-5107 (synthetic) (observed 2026-10-24, run run_d44ab38e823d).
+  - Inventory run on 2026-10-24 across all 9 Java services: 7 were already on Spring Framew...
+  superseded: Spring Framework security announcement (paraphrased) - Spring Framework 5.3.18 and 5.2.20 are available and fix this vulnerability. Users of a...
+  superseded: Spring Framework security announcement (paraphrased) - Spring Framework 5.3.18 and 5.2.20 are available and fix this vulnerability. Users of a...
+Policy: source-priority (internal_ticket > nvd > vendor_changelog). Record: 25 events, 23 audit entries (full log: logs/CVE-2022-22965_meterless.jsonl).
+
+--- EXPLOITATION SIGNAL ---
+KNOWN TO BE EXPLOITED  [public data; source: CISA Known Exploited Vulnerabilities catalog]
+CVE-2022-22965 (Spring4Shell) is listed in the CISA Known Exploited Vulnerabilities catalog.
+Note: Recorded from the public catalog listing; the listing date was not recorded here. Verify at cisa.gov before relying on it.
+This changes the urgency and the triage order, not the verdict: whether it is fixed is decided by the evidence above.
+
+--- DATA LAYER ---
+Zetaris: SQL on Zetaris view vuln.signals (LEFT JOIN of three views over REST tables):
+  nvd_*     <- vuln.nvd_entries     <- REST /nvd     (NVD entry)
+  vendor_*  <- vuln.vendor_entries  <- REST /vendor  (vendor changelog)
+  ticket_*  <- vuln.ticket_entries  <- REST /tickets (internal ticket)
+  SELECT 25 columns FROM vuln.signals WHERE cve_id IN ('CVE-2022-22965') ORDER BY cve_id
+  A source whose columns are NULL is treated as absent (not as empty).
+  Second query: exploitation signal from vuln.exploit_entries <- REST /exploitation (no row = unknown, not 'safe').
+
+--- MODE: rule-based (no AI model) ---
+Deterministic and quiet: no false alarms in our test set, but it misses hedges worded in ways
+its rules do not know. An AI mode exists (--provider ollama): on our test half it caught 53 of 56
+unusual hedges (rules: 1) but wrongly flagged 9-10 of 86 clear statements as uncertain. See SETUP.md.
+
+[2026-10-24T18:28:34.191172+00:00]     SourceMapper | data_layer             -> Reconciler       | status=ok conf=None retries=0
+    in:  case CVE-2023-0001
+    out: Zetaris: SQL on Zetaris view vuln.signals (LEFT JOIN of three views over REST tables):
+  nvd_*     <- vuln.nvd_entries     <- REST /nvd     (NVD entry)
+  vendor_*  <- vuln.vendor_entries  <- REST /vendor  (vendor changelog)
+  ticket_*  <- vuln.ticket_entries  <- REST /tickets (internal ticket)
+  SELECT 25 columns FROM vuln.signals WHERE cve_id IN ('CVE-2023-0001') ORDER BY cve_id
+  A source whose columns are NULL is treated as absent (not as empty).
+  Second query: exploitation signal from vuln.exploit_entries <- REST /exploitation (no row = unknown, not 'safe').
+
+======================================================================
+CASE: CVE-2023-0001 (SYNTHETIC EXAMPLE - unconditional confirmation, no caveats)
+======================================================================
+[2026-10-24T18:28:34.191320+00:00]     SourceMapper | map_sources            -> Reconciler       | status=ok conf=None retries=0
+    in:  3 raw sources for CVE-2023-0001
+    out: 3 normalised claims; certainty={'nvd': 'high (keyword-fallback)', 'vendor_changelog': 'high (keyword-fallback)', 'internal_ticket': 'high (keyword-fallback)'}
+[2026-10-24T18:28:34.240747+00:00]     SourceMapper | build_world_model (Meterless schema) -> Reconciler       | status=ok conf=None retries=0
+    in:  3 claims for CVE-2023-0001
+    out: 4 Entities, 3 Edges (0 davon mit confidence<0.5) -> logs/CVE-2023-0001_world_model.json
+[2026-10-24T18:28:34.240795+00:00]     SourceMapper | meterless_engine       -> Reconciler       | status=ok conf=None retries=0
+    in:  3 claims as facts/relations for CVE-2023-0001
+    out: Meterless engine on node v24.19.0: 'remediation_status': internal_ticket wins over vendor_changelog (conflict policy source-priority); id parity 4/4; 24 events
+[2026-10-24T18:28:34.241902+00:00]       Reconciler | build_draft (vendor-only, optimistic) -> ChallengeAgent   | status=ok conf=None retries=0
+    in:  vendor claim for CVE-2023-0001: 'The unbounded allocation path has been completely removed from the cod...'
+    out: resolved=True, severity=downgraded (per vendor default)
+[2026-10-24T18:28:34.241944+00:00]   ChallengeAgent | approve (internal ticket independently confirms) -> Reporter         | status=approved conf=None retries=0
+    in:  internal ticket certainty=high, text: 'Ran the automated compliance scan across all 12 production instances on 2024-06-01. All 12...'
+    out: Vendor claim independently confirmed by internal evidence - resolved
+[2026-10-24T18:28:34.241983+00:00]         Reporter | write_report (sample-mode template) -> -                | status=ok conf=high retries=0
+    in:  final decision for CVE-2023-0001: resolved=True
+    out: CVE: CVE-2023-0001 NVD baseline: HIGH (CVSS 7.5) Final assessment: downgraded (vendor default confirmed by internal chec...
+
+--- REPORT ---
+CVE: CVE-2023-0001
+NVD baseline: HIGH (CVSS 7.5)
+Final assessment: downgraded (vendor default confirmed by internal check)
+Confidence: high
+Revisions during review: 0
+
+Evidence path:
+  - NVD: A maliciously crafted archive can cause ExampleParser to allocate unbounded memory, allowing an attacker to exhaust available system memory and crash the service.
+  - Vendor changelog: The unbounded allocation path has been completely removed from the codebase in 3.5. This was verified by our own security team through a full code audit on 2024-01-15, with no remaining code path that can trigger it.
+  - Internal ticket: Ran the automated compliance scan across all 12 production instances on 2024-06-01. All 12 report ExampleParser version 3.5.2. Zero exceptions, zero instances pending update.
+
+Conclusion: the vendor's stated default is independently confirmed by the internal ticket. Downgrade accepted.
+--- EVIDENCE TRAIL (Meterless World Model) ---
+Baseline: HIGH (from NVD-style entry).
+Remediation belief taken from: Ticket OPS-6010 (synthetic) (observed 2026-10-24, run run_174011fa885e).
+  - Ran the automated compliance scan across all 12 production instances on 2024-06-01. All...
+  superseded: ExampleParser release notes 3.5 (synthetic) - The unbounded allocation path has been completely removed from the codebase in 3.5. Thi...
+Policy: source-priority (internal_ticket > nvd > vendor_changelog). Record: 24 events, 22 audit entries (full log: logs/CVE-2023-0001_meterless.jsonl).
+
+--- EXPLOITATION SIGNAL ---
+No exploitation signal recorded for this case. That means UNKNOWN, not 'not exploited'.
+It does not change the verdict above.
+
+--- DATA LAYER ---
+Zetaris: SQL on Zetaris view vuln.signals (LEFT JOIN of three views over REST tables):
+  nvd_*     <- vuln.nvd_entries     <- REST /nvd     (NVD entry)
+  vendor_*  <- vuln.vendor_entries  <- REST /vendor  (vendor changelog)
+  ticket_*  <- vuln.ticket_entries  <- REST /tickets (internal ticket)
+  SELECT 25 columns FROM vuln.signals WHERE cve_id IN ('CVE-2023-0001') ORDER BY cve_id
+  A source whose columns are NULL is treated as absent (not as empty).
+  Second query: exploitation signal from vuln.exploit_entries <- REST /exploitation (no row = unknown, not 'safe').
+
+--- MODE: rule-based (no AI model) ---
+Deterministic and quiet: no false alarms in our test set, but it misses hedges worded in ways
+its rules do not know. An AI mode exists (--provider ollama): on our test half it caught 53 of 56
+unusual hedges (rules: 1) but wrongly flagged 9-10 of 86 clear statements as uncertain. See SETUP.md.
+
+[2026-10-24T18:28:34.242580+00:00]     SourceMapper | data_layer             -> Reconciler       | status=ok conf=None retries=0
+    in:  case CVE-2023-0002
+    out: Zetaris: SQL on Zetaris view vuln.signals (LEFT JOIN of three views over REST tables):
+  nvd_*     <- vuln.nvd_entries     <- REST /nvd     (NVD entry)
+  vendor_*  <- vuln.vendor_entries  <- REST /vendor  (vendor changelog)
+  ticket_*  <- vuln.ticket_entries  <- REST /tickets (internal ticket)
+  SELECT 25 columns FROM vuln.signals WHERE cve_id IN ('CVE-2023-0002') ORDER BY cve_id
+  A source whose columns are NULL is treated as absent (not as empty).
+  Second query: exploitation signal from vuln.exploit_entries <- REST /exploitation (no row = unknown, not 'safe').
+
+======================================================================
+CASE: CVE-2023-0002 (SYNTHETIC EXAMPLE - clearly hedged on both sides)
+======================================================================
+[2026-10-24T18:28:34.242700+00:00]     SourceMapper | map_sources            -> Reconciler       | status=ok conf=None retries=0
+    in:  3 raw sources for CVE-2023-0002
+    out: 3 normalised claims; certainty={'nvd': 'high (keyword-fallback)', 'vendor_changelog': 'high (keyword-fallback)', 'internal_ticket': 'low (implicit-hedge-override)'}
+[2026-10-24T18:28:34.293873+00:00]     SourceMapper | build_world_model (Meterless schema) -> Reconciler       | status=ok conf=None retries=0
+    in:  3 claims for CVE-2023-0002
+    out: 4 Entities, 3 Edges (1 davon mit confidence<0.5) -> logs/CVE-2023-0002_world_model.json
+[2026-10-24T18:28:34.293920+00:00]     SourceMapper | meterless_engine       -> Reconciler       | status=ok conf=None retries=0
+    in:  3 claims as facts/relations for CVE-2023-0002
+    out: Meterless engine on node v24.19.0: 'remediation_status': internal_ticket wins over vendor_changelog, vendor_changelog (conflict policy source-priority); id parity 4/4; 25 events
+[2026-10-24T18:28:34.294921+00:00]       Reconciler | build_draft (vendor-only, optimistic) -> ChallengeAgent   | status=ok conf=None retries=0
+    in:  vendor claim for CVE-2023-0002: 'We believe this may already be mitigated by the sandboxing layer intro...'
+    out: resolved=False, severity=HIGH
+[2026-10-24T18:28:34.294955+00:00]   ChallengeAgent | approve (nothing to challenge) -> Reporter         | status=approved conf=None retries=0
+    in:  Reconciler's first draft already did not claim resolution
+    out: Confirmed unresolved - flag for human review
+[2026-10-24T18:28:34.294988+00:00]         Reporter | write_report (sample-mode template) -> -                | status=ok conf=low - unresolved, human review required retries=0
+    in:  final decision for CVE-2023-0002: resolved=False
+    out: CVE: CVE-2023-0002 NVD baseline: HIGH (CVSS 8.6) Final assessment: HIGH Confidence: low - unresolved, human review requi...
+
+--- REPORT ---
+CVE: CVE-2023-0002
+NVD baseline: HIGH (CVSS 8.6)
+Final assessment: HIGH
+Confidence: low - unresolved, human review required
+Revisions during review: 0
+
+Evidence path:
+  - NVD: An out-of-bounds read in ExampleCodec allows an attacker to leak adjacent heap memory via a crafted media file.
+  - Vendor changelog: We believe this may already be mitigated by the sandboxing layer introduced in 2.6, but we have not formally verified this interaction and cannot yet confirm it closes the gap.
+  - Internal ticket: Only checked 2 of our 15 edge nodes so far. Both were on 2.7 without the sandbox flag enabled. The remaining 13 are scheduled for next week's maintenance window and have not been checked.
+
+Conclusion: NOT resolved. The evidence does not show that the issue is fixed or safe in this environment; the section 'What would resolve this' names what is missing. Treat it as unresolved, and do not downgrade urgency, until a person has verified it.
+
+--- WHAT WOULD RESOLVE THIS ---
+1. Internal: only part was confirmed ('Only checked 2 of our 15 edge nodes so far.'). Check the rest directly and record the result.
+2. Vendor: the statement neither announces a fix nor says the issue is safe by default. Obtain one that does.
+--- EVIDENCE TRAIL (Meterless World Model) ---
+Baseline: HIGH (from NVD-style entry).
+Remediation belief taken from: Ticket OPS-6033 (synthetic) (observed 2026-10-24, run run_00cce7ea19e8).
+  - Only checked 2 of our 15 edge nodes so far. Both were on 2.7 without the sandbox flag e...
+  superseded: ExampleCodec advisory (synthetic) - We believe this may already be mitigated by the sandboxing layer introduced in 2.6, but...
+  superseded: ExampleCodec advisory (synthetic) - We believe this may already be mitigated by the sandboxing layer introduced in 2.6, but...
+Policy: source-priority (internal_ticket > nvd > vendor_changelog). Record: 25 events, 23 audit entries (full log: logs/CVE-2023-0002_meterless.jsonl).
+
+--- EXPLOITATION SIGNAL ---
+No exploitation signal recorded for this case. That means UNKNOWN, not 'not exploited'.
+It does not change the verdict above.
+
+--- DATA LAYER ---
+Zetaris: SQL on Zetaris view vuln.signals (LEFT JOIN of three views over REST tables):
+  nvd_*     <- vuln.nvd_entries     <- REST /nvd     (NVD entry)
+  vendor_*  <- vuln.vendor_entries  <- REST /vendor  (vendor changelog)
+  ticket_*  <- vuln.ticket_entries  <- REST /tickets (internal ticket)
+  SELECT 25 columns FROM vuln.signals WHERE cve_id IN ('CVE-2023-0002') ORDER BY cve_id
+  A source whose columns are NULL is treated as absent (not as empty).
+  Second query: exploitation signal from vuln.exploit_entries <- REST /exploitation (no row = unknown, not 'safe').
+
+--- MODE: rule-based (no AI model) ---
+Deterministic and quiet: no false alarms in our test set, but it misses hedges worded in ways
+its rules do not know. An AI mode exists (--provider ollama): on our test half it caught 53 of 56
+unusual hedges (rules: 1) but wrongly flagged 9-10 of 86 clear statements as uncertain. See SETUP.md.
+
+[2026-10-24T18:28:34.295651+00:00]     SourceMapper | data_layer             -> Reconciler       | status=ok conf=None retries=0
+    in:  case CVE-2023-0003
+    out: Zetaris: SQL on Zetaris view vuln.signals (LEFT JOIN of three views over REST tables):
+  nvd_*     <- vuln.nvd_entries     <- REST /nvd     (NVD entry)
+  vendor_*  <- vuln.vendor_entries  <- REST /vendor  (vendor changelog)
+  ticket_*  <- vuln.ticket_entries  <- REST /tickets (internal ticket)
+  SELECT 25 columns FROM vuln.signals WHERE cve_id IN ('CVE-2023-0003') ORDER BY cve_id
+  A source whose columns are NULL is treated as absent (not as empty).
+  Second query: exploitation signal from vuln.exploit_entries <- REST /exploitation (no row = unknown, not 'safe').
+
+======================================================================
+CASE: CVE-2023-0003 (SYNTHETIC EXAMPLE - heavy capability language, still fully resolved)
+======================================================================
+[2026-10-24T18:28:34.295791+00:00]     SourceMapper | map_sources            -> Reconciler       | status=ok conf=None retries=0
+    in:  3 raw sources for CVE-2023-0003
+    out: 3 normalised claims; certainty={'nvd': 'high (keyword-fallback)', 'vendor_changelog': 'high (keyword-fallback)', 'internal_ticket': 'high (keyword-fallback)'}
+[2026-10-24T18:28:34.346099+00:00]     SourceMapper | build_world_model (Meterless schema) -> Reconciler       | status=ok conf=None retries=0
+    in:  3 claims for CVE-2023-0003
+    out: 4 Entities, 3 Edges (0 davon mit confidence<0.5) -> logs/CVE-2023-0003_world_model.json
+[2026-10-24T18:28:34.346144+00:00]     SourceMapper | meterless_engine       -> Reconciler       | status=ok conf=None retries=0
+    in:  3 claims as facts/relations for CVE-2023-0003
+    out: Meterless engine on node v24.19.0: 'remediation_status': internal_ticket wins over vendor_changelog (conflict policy source-priority); id parity 4/4; 24 events
+[2026-10-24T18:28:34.347241+00:00]       Reconciler | build_draft (vendor-only, optimistic) -> ChallengeAgent   | status=ok conf=None retries=0
+    in:  vendor claim for CVE-2023-0003: 'Path traversal is fully closed in 1.10 through strict canonical-path v...'
+    out: resolved=True, severity=downgraded (per vendor default)
+[2026-10-24T18:28:34.347294+00:00]   ChallengeAgent | approve (internal ticket independently confirms) -> Reporter         | status=approved conf=None retries=0
+    in:  internal ticket certainty=high, text: 'Automated fleet inventory confirms all 8 ExampleFileServer instances are on 1.10.1 as of t...'
+    out: Vendor claim independently confirmed by internal evidence - resolved
+[2026-10-24T18:28:34.347343+00:00]         Reporter | write_report (sample-mode template) -> -                | status=ok conf=high retries=0
+    in:  final decision for CVE-2023-0003: resolved=True
+    out: CVE: CVE-2023-0003 NVD baseline: CRITICAL (CVSS 9.1) Final assessment: downgraded (vendor default confirmed by internal ...
+
+--- REPORT ---
+CVE: CVE-2023-0003
+NVD baseline: CRITICAL (CVSS 9.1)
+Final assessment: downgraded (vendor default confirmed by internal check)
+Confidence: high
+Revisions during review: 0
+
+Evidence path:
+  - NVD: A path traversal flaw in ExampleFileServer allows a remote attacker to read arbitrary files outside the served directory, which can then be used to exfiltrate credentials or configuration secrets.
+  - Vendor changelog: Path traversal is fully closed in 1.10 through strict canonical-path validation with no exceptions or opt-outs. Every request path is checked against the same validation regardless of configuration.
+  - Internal ticket: Automated fleet inventory confirms all 8 ExampleFileServer instances are on 1.10.1 as of this morning's scan. No instance is pinned to an older version.
+
+Conclusion: the vendor's stated default is independently confirmed by the internal ticket. Downgrade accepted.
+--- EVIDENCE TRAIL (Meterless World Model) ---
+Baseline: CRITICAL (from NVD-style entry).
+Remediation belief taken from: Ticket OPS-6050 (synthetic) (observed 2026-10-24, run run_cc6d95808f95).
+  - Automated fleet inventory confirms all 8 ExampleFileServer instances are on 1.10.1 as o...
+  superseded: ExampleFileServer release notes 1.10 (synthetic) - Path traversal is fully closed in 1.10 through strict canonical-path validation with no...
+Policy: source-priority (internal_ticket > nvd > vendor_changelog). Record: 24 events, 22 audit entries (full log: logs/CVE-2023-0003_meterless.jsonl).
+
+--- EXPLOITATION SIGNAL ---
+No exploitation signal recorded for this case. That means UNKNOWN, not 'not exploited'.
+It does not change the verdict above.
+
+--- DATA LAYER ---
+Zetaris: SQL on Zetaris view vuln.signals (LEFT JOIN of three views over REST tables):
+  nvd_*     <- vuln.nvd_entries     <- REST /nvd     (NVD entry)
+  vendor_*  <- vuln.vendor_entries  <- REST /vendor  (vendor changelog)
+  ticket_*  <- vuln.ticket_entries  <- REST /tickets (internal ticket)
+  SELECT 25 columns FROM vuln.signals WHERE cve_id IN ('CVE-2023-0003') ORDER BY cve_id
+  A source whose columns are NULL is treated as absent (not as empty).
+  Second query: exploitation signal from vuln.exploit_entries <- REST /exploitation (no row = unknown, not 'safe').
+
+--- MODE: rule-based (no AI model) ---
+Deterministic and quiet: no false alarms in our test set, but it misses hedges worded in ways
+its rules do not know. An AI mode exists (--provider ollama): on our test half it caught 53 of 56
+unusual hedges (rules: 1) but wrongly flagged 9-10 of 86 clear statements as uncertain. See SETUP.md.
+
+[2026-10-24T18:28:34.347922+00:00]     SourceMapper | data_layer             -> Reconciler       | status=ok conf=None retries=0
+    in:  case CVE-2023-0004
+    out: Zetaris: SQL on Zetaris view vuln.signals (LEFT JOIN of three views over REST tables):
+  nvd_*     <- vuln.nvd_entries     <- REST /nvd     (NVD entry)
+  vendor_*  <- vuln.vendor_entries  <- REST /vendor  (vendor changelog)
+  ticket_*  <- vuln.ticket_entries  <- REST /tickets (internal ticket)
+  SELECT 25 columns FROM vuln.signals WHERE cve_id IN ('CVE-2023-0004') ORDER BY cve_id
+  A source whose columns are NULL is treated as absent (not as empty).
+  Second query: exploitation signal from vuln.exploit_entries <- REST /exploitation (no row = unknown, not 'safe').
+
+======================================================================
+CASE: CVE-2023-0004 (SYNTHETIC EXAMPLE - scope trap: sounds fully confident, quietly narrower than claimed)
+======================================================================
+[2026-10-24T18:28:34.348060+00:00]     SourceMapper | map_sources            -> Reconciler       | status=ok conf=None retries=0
+    in:  3 raw sources for CVE-2023-0004
+    out: 3 normalised claims; certainty={'nvd': 'high (keyword-fallback)', 'vendor_changelog': 'low (scope-overclaim-override)', 'internal_ticket': 'high (keyword-fallback)'}
+[2026-10-24T18:28:34.399888+00:00]     SourceMapper | build_world_model (Meterless schema) -> Reconciler       | status=ok conf=None retries=0
+    in:  3 claims for CVE-2023-0004
+    out: 4 Entities, 3 Edges (1 davon mit confidence<0.5) -> logs/CVE-2023-0004_world_model.json
+[2026-10-24T18:28:34.399937+00:00]     SourceMapper | meterless_engine       -> Reconciler       | status=ok conf=None retries=0
+    in:  3 claims as facts/relations for CVE-2023-0004
+    out: Meterless engine on node v24.19.0: 'remediation_status': internal_ticket wins over vendor_changelog (conflict policy source-priority); id parity 4/4; 24 events
+[2026-10-24T18:28:34.400963+00:00]       Reconciler | build_draft (vendor-only, optimistic) -> ChallengeAgent   | status=ok conf=None retries=0
+    in:  vendor claim for CVE-2023-0004: 'All internet-facing load balancers now enforce the patched TLS configu...'
+    out: resolved=False, severity=HIGH
+[2026-10-24T18:28:34.400999+00:00]   ChallengeAgent | approve (nothing to challenge) -> Reporter         | status=approved conf=None retries=0
+    in:  Reconciler's first draft already did not claim resolution
+    out: Confirmed unresolved - flag for human review
+[2026-10-24T18:28:34.401034+00:00]         Reporter | write_report (sample-mode template) -> -                | status=ok conf=low - unresolved, human review required retries=0
+    in:  final decision for CVE-2023-0004: resolved=False
+    out: CVE: CVE-2023-0004 NVD baseline: HIGH (CVSS 7.4) Final assessment: HIGH Confidence: low - unresolved, human review requi...
+
+--- REPORT ---
+CVE: CVE-2023-0004
+NVD baseline: HIGH (CVSS 7.4)
+Final assessment: HIGH
+Confidence: low - unresolved, human review required
+Revisions during review: 0
+
+Evidence path:
+  - NVD: A TLS renegotiation flaw in ExampleGateway allows a man-in-the-middle attacker to downgrade the negotiated cipher suite and intercept traffic.
+  - Vendor changelog: All internet-facing load balancers now enforce the patched TLS configuration. This fully addresses the vulnerability described in the advisory.
+  - Internal ticket: Confirmed all 4 internet-facing load balancers run the patched TLS stack as of this week's scan. Internal service-mesh traffic between backend pods does not pass through these load balancers and uses a separate TLS implementation, outside this patch cycle.
+
+Conclusion: NOT resolved. The evidence does not show that the issue is fixed or safe in this environment; the section 'What would resolve this' names what is missing. Treat it as unresolved, and do not downgrade urgency, until a person has verified it.
+
+--- WHAT WOULD RESOLVE THIS ---
+1. Vendor: the claim is broader than what is backed. Verify the part of the environment it does not cover.
+--- EVIDENCE TRAIL (Meterless World Model) ---
+Baseline: HIGH (from NVD-style entry).
+Remediation belief taken from: Ticket OPS-6120 (synthetic) (observed 2026-10-24, run run_79314b7b6a47).
+  - Confirmed all 4 internet-facing load balancers run the patched TLS stack as of this wee...
+  superseded: ExampleGateway advisory (synthetic) - All internet-facing load balancers now enforce the patched TLS configuration. This full...
+Policy: source-priority (internal_ticket > nvd > vendor_changelog). Record: 24 events, 22 audit entries (full log: logs/CVE-2023-0004_meterless.jsonl).
+
+--- EXPLOITATION SIGNAL ---
+No exploitation signal recorded for this case. That means UNKNOWN, not 'not exploited'.
+It does not change the verdict above.
+
+--- DATA LAYER ---
+Zetaris: SQL on Zetaris view vuln.signals (LEFT JOIN of three views over REST tables):
+  nvd_*     <- vuln.nvd_entries     <- REST /nvd     (NVD entry)
+  vendor_*  <- vuln.vendor_entries  <- REST /vendor  (vendor changelog)
+  ticket_*  <- vuln.ticket_entries  <- REST /tickets (internal ticket)
+  SELECT 25 columns FROM vuln.signals WHERE cve_id IN ('CVE-2023-0004') ORDER BY cve_id
+  A source whose columns are NULL is treated as absent (not as empty).
+  Second query: exploitation signal from vuln.exploit_entries <- REST /exploitation (no row = unknown, not 'safe').
+
+--- MODE: rule-based (no AI model) ---
+Deterministic and quiet: no false alarms in our test set, but it misses hedges worded in ways
+its rules do not know. An AI mode exists (--provider ollama): on our test half it caught 53 of 56
+unusual hedges (rules: 1) but wrongly flagged 9-10 of 86 clear statements as uncertain. See SETUP.md.
+
+[2026-10-24T18:28:34.401657+00:00]     SourceMapper | data_layer             -> Reconciler       | status=ok conf=None retries=0
+    in:  case CVE-2023-0005
+    out: Zetaris: SQL on Zetaris view vuln.signals (LEFT JOIN of three views over REST tables):
+  nvd_*     <- vuln.nvd_entries     <- REST /nvd     (NVD entry)
+  vendor_*  <- vuln.vendor_entries  <- REST /vendor  (vendor changelog)
+  ticket_*  <- vuln.ticket_entries  <- REST /tickets (internal ticket)
+  SELECT 25 columns FROM vuln.signals WHERE cve_id IN ('CVE-2023-0005') ORDER BY cve_id
+  A source whose columns are NULL is treated as absent (not as empty).
+  Second query: exploitation signal from vuln.exploit_entries <- REST /exploitation (no row = unknown, not 'safe').
+
+======================================================================
+CASE: CVE-2023-0005 (SYNTHETIC EXAMPLE - reverse trap: conditional wording, but fully verified)
+======================================================================
+[2026-10-24T18:28:34.401807+00:00]     SourceMapper | map_sources            -> Reconciler       | status=ok conf=None retries=0
+    in:  3 raw sources for CVE-2023-0005
+    out: 3 normalised claims; certainty={'nvd': 'high (keyword-fallback)', 'vendor_changelog': 'high (keyword-fallback)', 'internal_ticket': 'high (keyword-fallback)'}
+[2026-10-24T18:28:34.456688+00:00]     SourceMapper | build_world_model (Meterless schema) -> Reconciler       | status=ok conf=None retries=0
+    in:  3 claims for CVE-2023-0005
+    out: 4 Entities, 3 Edges (0 davon mit confidence<0.5) -> logs/CVE-2023-0005_world_model.json
+[2026-10-24T18:28:34.456736+00:00]     SourceMapper | meterless_engine       -> Reconciler       | status=ok conf=None retries=0
+    in:  3 claims as facts/relations for CVE-2023-0005
+    out: Meterless engine on node v24.19.0: 'remediation_status': internal_ticket wins over vendor_changelog (conflict policy source-priority); id parity 4/4; 24 events
+[2026-10-24T18:28:34.457834+00:00]       Reconciler | build_draft (vendor-only, optimistic) -> ChallengeAgent   | status=ok conf=None retries=0
+    in:  vendor claim for CVE-2023-0005: 'Filename validation was rewritten in 2.6 to canonicalize every path be...'
+    out: resolved=True, severity=downgraded (per vendor default)
+[2026-10-24T18:28:34.457892+00:00]   ChallengeAgent | approve (internal ticket independently confirms) -> Reporter         | status=approved conf=None retries=0
+    in:  internal ticket certainty=high, text: 'If a filename contains a '../' sequence, the updated validator now rejects it before it re...'
+    out: Vendor claim independently confirmed by internal evidence - resolved
+[2026-10-24T18:28:34.457934+00:00]         Reporter | write_report (sample-mode template) -> -                | status=ok conf=high retries=0
+    in:  final decision for CVE-2023-0005: resolved=True
+    out: CVE: CVE-2023-0005 NVD baseline: HIGH (CVSS 8.2) Final assessment: downgraded (vendor default confirmed by internal chec...
+
+--- REPORT ---
+CVE: CVE-2023-0005
+NVD baseline: HIGH (CVSS 8.2)
+Final assessment: downgraded (vendor default confirmed by internal check)
+Confidence: high
+Revisions during review: 0
+
+Evidence path:
+  - NVD: A path traversal flaw in ExampleUploader allows a remote attacker to write files outside the intended upload directory via a crafted filename.
+  - Vendor changelog: Filename validation was rewritten in 2.6 to canonicalize every path before any file write. This closes the traversal vector entirely, with no configuration flag able to re-enable the old behaviour.
+  - Internal ticket: If a filename contains a '../' sequence, the updated validator now rejects it before it reaches the filesystem layer. We replayed all 40 known bypass payloads from the original disclosure against all 6 production instances in today's automated regression run; zero payloads passed.
+
+Conclusion: the vendor's stated default is independently confirmed by the internal ticket. Downgrade accepted.
+--- EVIDENCE TRAIL (Meterless World Model) ---
+Baseline: HIGH (from NVD-style entry).
+Remediation belief taken from: Ticket OPS-6144 (synthetic) (observed 2026-10-24, run run_6cdf6d27a333).
+  - If a filename contains a '../' sequence, the updated validator now rejects it before it...
+  superseded: ExampleUploader release notes 2.6 (synthetic) - Filename validation was rewritten in 2.6 to canonicalize every path before any file wri...
+Policy: source-priority (internal_ticket > nvd > vendor_changelog). Record: 24 events, 22 audit entries (full log: logs/CVE-2023-0005_meterless.jsonl).
+
+--- EXPLOITATION SIGNAL ---
+No exploitation signal recorded for this case. That means UNKNOWN, not 'not exploited'.
+It does not change the verdict above.
+
+--- DATA LAYER ---
+Zetaris: SQL on Zetaris view vuln.signals (LEFT JOIN of three views over REST tables):
+  nvd_*     <- vuln.nvd_entries     <- REST /nvd     (NVD entry)
+  vendor_*  <- vuln.vendor_entries  <- REST /vendor  (vendor changelog)
+  ticket_*  <- vuln.ticket_entries  <- REST /tickets (internal ticket)
+  SELECT 25 columns FROM vuln.signals WHERE cve_id IN ('CVE-2023-0005') ORDER BY cve_id
+  A source whose columns are NULL is treated as absent (not as empty).
+  Second query: exploitation signal from vuln.exploit_entries <- REST /exploitation (no row = unknown, not 'safe').
+
+--- MODE: rule-based (no AI model) ---
+Deterministic and quiet: no false alarms in our test set, but it misses hedges worded in ways
+its rules do not know. An AI mode exists (--provider ollama): on our test half it caught 53 of 56
+unusual hedges (rules: 1) but wrongly flagged 9-10 of 86 clear statements as uncertain. See SETUP.md.
+
+[2026-10-24T18:28:34.458634+00:00]     SourceMapper | data_layer             -> Reconciler       | status=ok conf=None retries=0
+    in:  case CVE-2024-7001
+    out: Zetaris: SQL on Zetaris view vuln.signals (LEFT JOIN of three views over REST tables):
+  nvd_*     <- vuln.nvd_entries     <- REST /nvd     (NVD entry)
+  vendor_*  <- vuln.vendor_entries  <- REST /vendor  (vendor changelog)
+  ticket_*  <- vuln.ticket_entries  <- REST /tickets (internal ticket)
+  SELECT 25 columns FROM vuln.signals WHERE cve_id IN ('CVE-2024-7001') ORDER BY cve_id
+  A source whose columns are NULL is treated as absent (not as empty).
+  Second query: exploitation signal from vuln.exploit_entries <- REST /exploitation (no row = unknown, not 'safe').
+
+======================================================================
+CASE: CVE-2024-7001 (SYNTHETIC - vendor fix is strong, but nobody internally has checked yet)
+======================================================================
+[2026-10-24T18:28:34.458747+00:00]     SourceMapper | backfill_missing_sources -> Reconciler       | status=ok conf=None retries=0
+    in:  case provided only ['nvd', 'vendor_changelog']
+    out: missing source(s) ['internal_ticket'] treated as low-certainty placeholders, not a crash
+[2026-10-24T18:28:34.458783+00:00]     SourceMapper | map_sources            -> Reconciler       | status=ok conf=None retries=0
+    in:  2 raw sources for CVE-2024-7001
+    out: 3 normalised claims; certainty={'nvd': 'high (keyword-fallback)', 'vendor_changelog': 'high (keyword-fallback)', 'internal_ticket': 'low (absent-source)'}
+[2026-10-24T18:28:34.507548+00:00]     SourceMapper | build_world_model (Meterless schema) -> Reconciler       | status=ok conf=None retries=0
+    in:  3 claims for CVE-2024-7001
+    out: 4 Entities, 3 Edges (1 davon mit confidence<0.5) -> logs/CVE-2024-7001_world_model.json
+[2026-10-24T18:28:34.507594+00:00]     SourceMapper | meterless_engine       -> Reconciler       | status=ok conf=None retries=0
+    in:  3 claims as facts/relations for CVE-2024-7001
+    out: Meterless engine on node v24.19.0: no conflicting facts; id parity 3/3; 17 events
+[2026-10-24T18:28:34.508639+00:00]       Reconciler | build_draft (vendor-only, optimistic) -> ChallengeAgent   | status=ok conf=None retries=0
+    in:  vendor claim for CVE-2024-7001: 'Unsafe deserialization is disabled by default in 3.5 and the vulnerabl...'
+    out: resolved=True, severity=downgraded (per vendor default)
+[2026-10-24T18:28:34.508677+00:00]   ChallengeAgent | reject (internal evidence insufficient) -> Reconciler       | status=rejected conf=None retries=0
+    in:  draft resolved=True on vendor text alone for CVE-2024-7001
+    out: Resolution relies only on the vendor changelog. The internal ticket is not certain: (This source does not exist for this case - treated as unconfirmed, not as safe.) - it does not confirm the vendor's claim holds here. Re-run incorporating the internal ticket; do not resolve on vendor text alone.
+[2026-10-24T18:28:34.508714+00:00]       Reconciler | revise_draft (incorporating internal ticket) -> ChallengeAgent   | status=ok conf=None retries=1
+    in:  critique received: Resolution relies only on the vendor changelog. The internal ticket is not certain: (This source does not exist for this case - treated as unconfirmed, not as safe.) - it does not confirm the vendor's claim holds here. Re-run incorporating the internal ticket; do not resolve on vendor text alone.
+    out: resolved=False, severity=HIGH - NOT downgraded, internal evidence insufficient
+[2026-10-24T18:28:34.508739+00:00]   ChallengeAgent | approve (nothing to challenge) -> Reporter         | status=approved conf=None retries=0
+    in:  Reconciler's first draft already did not claim resolution
+    out: Confirmed unresolved - flag for human review
+[2026-10-24T18:28:34.508770+00:00]         Reporter | write_report (sample-mode template) -> -                | status=ok conf=low - unresolved, human review required retries=0
+    in:  final decision for CVE-2024-7001: resolved=False
+    out: CVE: CVE-2024-7001 NVD baseline: HIGH (CVSS 8.8) Final assessment: HIGH - NOT downgraded, internal evidence insufficient...
+
+--- REPORT ---
+CVE: CVE-2024-7001
+NVD baseline: HIGH (CVSS 8.8)
+Final assessment: HIGH - NOT downgraded, internal evidence insufficient
+Confidence: low - unresolved, human review required
+Revisions during review: 1
+
+Evidence path:
+  - NVD: A deserialization flaw in ExampleQueue allows a remote attacker to execute arbitrary code via a crafted message payload.
+  - Vendor changelog: Unsafe deserialization is disabled by default in 3.5 and the vulnerable code path has been completely removed from the codebase. There is no configuration that re-enables the old behaviour.
+  - Internal ticket: No internal check/ticket recorded yet
+
+Conclusion: NOT resolved. The evidence does not show that the issue is fixed or safe in this environment; the section 'What would resolve this' names what is missing. Treat it as unresolved, and do not downgrade urgency, until a person has verified it.
+
+--- WHAT WOULD RESOLVE THIS ---
+1. Internal: nobody has recorded a check. Verify the affected systems directly and record the result.
+--- EVIDENCE TRAIL (Meterless World Model) ---
+Baseline: HIGH (from NVD-style entry).
+Remediation belief taken from: ExampleQueue security advisory (synthetic) (observed 2026-10-24, run run_d74bd02223c9).
+  - Unsafe deserialization is disabled by default in 3.5 and the vulnerable code path has b...
+Policy: source-priority (internal_ticket > nvd > vendor_changelog). Record: 17 events, 17 audit entries (full log: logs/CVE-2024-7001_meterless.jsonl).
+
+--- EXPLOITATION SIGNAL ---
+no exploitation found when checked  [SIMULATED; source: Simulated threat feed]
+The simulated feed was checked and shows no exploitation (as of the case date).
+Note: SYNTHETIC - invented for this demo.
+It does not change the verdict above.
+
+--- DATA LAYER ---
+Zetaris: SQL on Zetaris view vuln.signals (LEFT JOIN of three views over REST tables):
+  nvd_*     <- vuln.nvd_entries     <- REST /nvd     (NVD entry)
+  vendor_*  <- vuln.vendor_entries  <- REST /vendor  (vendor changelog)
+  ticket_*  <- vuln.ticket_entries  <- REST /tickets (internal ticket)
+  SELECT 25 columns FROM vuln.signals WHERE cve_id IN ('CVE-2024-7001') ORDER BY cve_id
+  A source whose columns are NULL is treated as absent (not as empty).
+  Second query: exploitation signal from vuln.exploit_entries <- REST /exploitation (no row = unknown, not 'safe').
+
+--- MODE: rule-based (no AI model) ---
+Deterministic and quiet: no false alarms in our test set, but it misses hedges worded in ways
+its rules do not know. An AI mode exists (--provider ollama): on our test half it caught 53 of 56
+unusual hedges (rules: 1) but wrongly flagged 9-10 of 86 clear statements as uncertain. See SETUP.md.
+
+[2026-10-24T18:28:34.509343+00:00]     SourceMapper | data_layer             -> Reconciler       | status=ok conf=None retries=0
+    in:  case CVE-2024-7002
+    out: Zetaris: SQL on Zetaris view vuln.signals (LEFT JOIN of three views over REST tables):
+  nvd_*     <- vuln.nvd_entries     <- REST /nvd     (NVD entry)
+  vendor_*  <- vuln.vendor_entries  <- REST /vendor  (vendor changelog)
+  ticket_*  <- vuln.ticket_entries  <- REST /tickets (internal ticket)
+  SELECT 25 columns FROM vuln.signals WHERE cve_id IN ('CVE-2024-7002') ORDER BY cve_id
+  A source whose columns are NULL is treated as absent (not as empty).
+  Second query: exploitation signal from vuln.exploit_entries <- REST /exploitation (no row = unknown, not 'safe').
+
+======================================================================
+CASE: CVE-2024-7002 (SYNTHETIC - team checked thoroughly, but the vendor never responded (unmaintained software))
+======================================================================
+[2026-10-24T18:28:34.509459+00:00]     SourceMapper | backfill_missing_sources -> Reconciler       | status=ok conf=None retries=0
+    in:  case provided only ['nvd', 'internal_ticket']
+    out: missing source(s) ['vendor_changelog'] treated as low-certainty placeholders, not a crash
+[2026-10-24T18:28:34.509491+00:00]     SourceMapper | map_sources            -> Reconciler       | status=ok conf=None retries=0
+    in:  2 raw sources for CVE-2024-7002
+    out: 3 normalised claims; certainty={'nvd': 'high (keyword-fallback)', 'internal_ticket': 'high (keyword-fallback)', 'vendor_changelog': 'low (absent-source)'}
+[2026-10-24T18:28:34.557342+00:00]     SourceMapper | build_world_model (Meterless schema) -> Reconciler       | status=ok conf=None retries=0
+    in:  3 claims for CVE-2024-7002
+    out: 4 Entities, 3 Edges (1 davon mit confidence<0.5) -> logs/CVE-2024-7002_world_model.json
+[2026-10-24T18:28:34.557394+00:00]     SourceMapper | meterless_engine       -> Reconciler       | status=ok conf=None retries=0
+    in:  3 claims as facts/relations for CVE-2024-7002
+    out: Meterless engine on node v24.19.0: 'remediation_status': internal_ticket wins over internal_ticket (conflict policy source-priority); id parity 3/3; 18 events
+[2026-10-24T18:28:34.558477+00:00]       Reconciler | build_draft (vendor-only, optimistic) -> ChallengeAgent   | status=ok conf=None retries=0
+    in:  vendor claim for CVE-2024-7002: 'No vendor statement available yet...'
+    out: resolved=False, severity=HIGH
+[2026-10-24T18:28:34.558513+00:00]   ChallengeAgent | approve (nothing to challenge) -> Reporter         | status=approved conf=None retries=0
+    in:  Reconciler's first draft already did not claim resolution
+    out: Confirmed unresolved - flag for human review
+[2026-10-24T18:28:34.558548+00:00]         Reporter | write_report (sample-mode template) -> -                | status=ok conf=low - unresolved, human review required retries=0
+    in:  final decision for CVE-2024-7002: resolved=False
+    out: CVE: CVE-2024-7002 NVD baseline: HIGH (CVSS 7.5) Final assessment: HIGH Confidence: low - unresolved, human review requi...
+
+--- REPORT ---
+CVE: CVE-2024-7002
+NVD baseline: HIGH (CVSS 7.5)
+Final assessment: HIGH
+Confidence: low - unresolved, human review required
+Revisions during review: 0
+
+Evidence path:
+  - NVD: An authentication bypass in ExampleReports allows a remote attacker to access report data without valid credentials.
+  - Vendor changelog: No vendor statement available yet
+  - Internal ticket: Since the vendor is unresponsive, we removed network access to ExampleReports entirely via firewall rule FW-881, verified on all 5 instances this morning - the service is no longer reachable from outside the internal VPN, confirmed with an external port scan showing no response.
+
+Conclusion: NOT resolved. The evidence does not show that the issue is fixed or safe in this environment; the section 'What would resolve this' names what is missing. Treat it as unresolved, and do not downgrade urgency, until a person has verified it.
+
+--- WHAT WOULD RESOLVE THIS ---
+1. Vendor: no statement exists. Ask the vendor for one, or document an independent mitigation.
+--- EVIDENCE TRAIL (Meterless World Model) ---
+Baseline: HIGH (from NVD-style entry).
+Remediation belief taken from: Ticket OPS-6210 (synthetic) (observed 2026-10-24, run run_4dfa9935eac7).
+  - Since the vendor is unresponsive, we removed network access to ExampleReports entirely ...
+  superseded: Ticket OPS-6210 (synthetic) - Since the vendor is unresponsive, we removed network access to ExampleReports entirely ...
+Policy: source-priority (internal_ticket > nvd > vendor_changelog). Record: 18 events, 18 audit entries (full log: logs/CVE-2024-7002_meterless.jsonl).
+
+--- EXPLOITATION SIGNAL ---
+KNOWN TO BE EXPLOITED  [SIMULATED; source: Simulated threat feed]
+The simulated feed reports exploitation attempts against this flaw.
+Note: SYNTHETIC - invented for this demo.
+This changes the urgency and the triage order, not the verdict: whether it is fixed is decided by the evidence above.
+
+--- DATA LAYER ---
+Zetaris: SQL on Zetaris view vuln.signals (LEFT JOIN of three views over REST tables):
+  nvd_*     <- vuln.nvd_entries     <- REST /nvd     (NVD entry)
+  vendor_*  <- vuln.vendor_entries  <- REST /vendor  (vendor changelog)
+  ticket_*  <- vuln.ticket_entries  <- REST /tickets (internal ticket)
+  SELECT 25 columns FROM vuln.signals WHERE cve_id IN ('CVE-2024-7002') ORDER BY cve_id
+  A source whose columns are NULL is treated as absent (not as empty).
+  Second query: exploitation signal from vuln.exploit_entries <- REST /exploitation (no row = unknown, not 'safe').
+
+--- MODE: rule-based (no AI model) ---
+Deterministic and quiet: no false alarms in our test set, but it misses hedges worded in ways
+its rules do not know. An AI mode exists (--provider ollama): on our test half it caught 53 of 56
+unusual hedges (rules: 1) but wrongly flagged 9-10 of 86 clear statements as uncertain. See SETUP.md.
+
+[2026-10-24T18:28:34.559168+00:00]     SourceMapper | data_layer             -> Reconciler       | status=ok conf=None retries=0
+    in:  case CVE-2024-7003
+    out: Zetaris: SQL on Zetaris view vuln.signals (LEFT JOIN of three views over REST tables):
+  nvd_*     <- vuln.nvd_entries     <- REST /nvd     (NVD entry)
+  vendor_*  <- vuln.vendor_entries  <- REST /vendor  (vendor changelog)
+  ticket_*  <- vuln.ticket_entries  <- REST /tickets (internal ticket)
+  SELECT 25 columns FROM vuln.signals WHERE cve_id IN ('CVE-2024-7003') ORDER BY cve_id
+  A source whose columns are NULL is treated as absent (not as empty).
+  Second query: exploitation signal from vuln.exploit_entries <- REST /exploitation (no row = unknown, not 'safe').
+
+======================================================================
+CASE: CVE-2024-7003 (SYNTHETIC - day one: only the public listing exists, nobody has reacted at all yet)
+======================================================================
+[2026-10-24T18:28:34.559245+00:00]     SourceMapper | backfill_missing_sources -> Reconciler       | status=ok conf=None retries=0
+    in:  case provided only ['nvd']
+    out: missing source(s) ['vendor_changelog', 'internal_ticket'] treated as low-certainty placeholders, not a crash
+[2026-10-24T18:28:34.559277+00:00]     SourceMapper | map_sources            -> Reconciler       | status=ok conf=None retries=0
+    in:  1 raw sources for CVE-2024-7003
+    out: 3 normalised claims; certainty={'nvd': 'high (keyword-fallback)', 'vendor_changelog': 'low (absent-source)', 'internal_ticket': 'low (absent-source)'}
+[2026-10-24T18:28:34.610231+00:00]     SourceMapper | build_world_model (Meterless schema) -> Reconciler       | status=ok conf=None retries=0
+    in:  3 claims for CVE-2024-7003
+    out: 4 Entities, 3 Edges (2 davon mit confidence<0.5) -> logs/CVE-2024-7003_world_model.json
+[2026-10-24T18:28:34.610278+00:00]     SourceMapper | meterless_engine       -> Reconciler       | status=ok conf=None retries=0
+    in:  3 claims as facts/relations for CVE-2024-7003
+    out: Meterless engine on node v24.19.0: no conflicting facts; id parity 2/2; 10 events
+[2026-10-24T18:28:34.611347+00:00]       Reconciler | build_draft (vendor-only, optimistic) -> ChallengeAgent   | status=ok conf=None retries=0
+    in:  vendor claim for CVE-2024-7003: 'No vendor statement available yet...'
+    out: resolved=False, severity=CRITICAL
+[2026-10-24T18:28:34.611382+00:00]   ChallengeAgent | approve (nothing to challenge) -> Reporter         | status=approved conf=None retries=0
+    in:  Reconciler's first draft already did not claim resolution
+    out: Confirmed unresolved - flag for human review
+[2026-10-24T18:28:34.611417+00:00]         Reporter | write_report (sample-mode template) -> -                | status=ok conf=low - unresolved, human review required retries=0
+    in:  final decision for CVE-2024-7003: resolved=False
+    out: CVE: CVE-2024-7003 NVD baseline: CRITICAL (CVSS 9.0) Final assessment: CRITICAL Confidence: low - unresolved, human revi...
+
+--- REPORT ---
+CVE: CVE-2024-7003
+NVD baseline: CRITICAL (CVSS 9.0)
+Final assessment: CRITICAL
+Confidence: low - unresolved, human review required
+Revisions during review: 0
+
+Evidence path:
+  - NVD: A critical remote code execution flaw in ExampleBroker was disclosed today via a security researcher's public write-up.
+  - Vendor changelog: No vendor statement available yet
+  - Internal ticket: No internal check/ticket recorded yet
+
+Conclusion: NOT resolved. The evidence does not show that the issue is fixed or safe in this environment; the section 'What would resolve this' names what is missing. Treat it as unresolved, and do not downgrade urgency, until a person has verified it.
+
+--- WHAT WOULD RESOLVE THIS ---
+1. Internal: nobody has recorded a check. Verify the affected systems directly and record the result.
+2. Vendor: no statement exists. Ask the vendor for one, or document an independent mitigation.
+--- EVIDENCE TRAIL (Meterless World Model) ---
+Baseline: CRITICAL (from NVD-style entry).
+Policy: source-priority (internal_ticket > nvd > vendor_changelog). Record: 10 events, 12 audit entries (full log: logs/CVE-2024-7003_meterless.jsonl).
+
+--- EXPLOITATION SIGNAL ---
+No exploitation signal recorded for this case. That means UNKNOWN, not 'not exploited'.
+It does not change the verdict above.
+
+--- DATA LAYER ---
+Zetaris: SQL on Zetaris view vuln.signals (LEFT JOIN of three views over REST tables):
+  nvd_*     <- vuln.nvd_entries     <- REST /nvd     (NVD entry)
+  vendor_*  <- vuln.vendor_entries  <- REST /vendor  (vendor changelog)
+  ticket_*  <- vuln.ticket_entries  <- REST /tickets (internal ticket)
+  SELECT 25 columns FROM vuln.signals WHERE cve_id IN ('CVE-2024-7003') ORDER BY cve_id
+  A source whose columns are NULL is treated as absent (not as empty).
+  Second query: exploitation signal from vuln.exploit_entries <- REST /exploitation (no row = unknown, not 'safe').
+
+--- MODE: rule-based (no AI model) ---
+Deterministic and quiet: no false alarms in our test set, but it misses hedges worded in ways
+its rules do not know. An AI mode exists (--provider ollama): on our test half it caught 53 of 56
+unusual hedges (rules: 1) but wrongly flagged 9-10 of 86 clear statements as uncertain. See SETUP.md.
+
+[2026-10-24T18:28:34.612065+00:00]     SourceMapper | data_layer             -> Reconciler       | status=ok conf=None retries=0
+    in:  case CVE-2024-8888
+    out: Zetaris: SQL on Zetaris view vuln.signals (LEFT JOIN of three views over REST tables):
+  nvd_*     <- vuln.nvd_entries     <- REST /nvd     (NVD entry)
+  vendor_*  <- vuln.vendor_entries  <- REST /vendor  (vendor changelog)
+  ticket_*  <- vuln.ticket_entries  <- REST /tickets (internal ticket)
+  SELECT 25 columns FROM vuln.signals WHERE cve_id IN ('CVE-2024-8888') ORDER BY cve_id
+  A source whose columns are NULL is treated as absent (not as empty).
+  Second query: exploitation signal from vuln.exploit_entries <- REST /exploitation (no row = unknown, not 'safe').
+
+======================================================================
+CASE: CVE-2024-8888 (SYNTHETIC EXAMPLE - unresolved conflict)
+======================================================================
+[2026-10-24T18:28:34.612233+00:00]     SourceMapper | map_sources            -> Reconciler       | status=ok conf=None retries=0
+    in:  3 raw sources for CVE-2024-8888
+    out: 3 normalised claims; certainty={'nvd': 'high (keyword-fallback)', 'vendor_changelog': 'low (implicit-hedge-override)', 'internal_ticket': 'low (keyword-fallback)'}
+[2026-10-24T18:28:34.663130+00:00]     SourceMapper | build_world_model (Meterless schema) -> Reconciler       | status=ok conf=None retries=0
+    in:  3 claims for CVE-2024-8888
+    out: 4 Entities, 3 Edges (2 davon mit confidence<0.5) -> logs/CVE-2024-8888_world_model.json
+[2026-10-24T18:28:34.663179+00:00]     SourceMapper | meterless_engine       -> Reconciler       | status=ok conf=None retries=0
+    in:  3 claims as facts/relations for CVE-2024-8888
+    out: Meterless engine on node v24.19.0: 'remediation_status': internal_ticket wins over vendor_changelog (conflict policy source-priority); id parity 4/4; 24 events
+[2026-10-24T18:28:34.664232+00:00]       Reconciler | build_draft (vendor-only, optimistic) -> ChallengeAgent   | status=ok conf=None retries=0
+    in:  vendor claim for CVE-2024-8888: 'Legacy compatibility mode (auth.legacy_mode) has been off by default s...'
+    out: resolved=True, severity=downgraded (per vendor default)
+[2026-10-24T18:28:34.664290+00:00]   ChallengeAgent | reject (internal evidence insufficient) -> Reconciler       | status=rejected conf=None retries=0
+    in:  draft resolved=True on vendor text alone for CVE-2024-8888
+    out: Resolution relies only on the vendor changelog. The internal ticket is not certain: 'Could not find the current value of auth.legacy_mode in the last two...' - it does not confirm the vendor's claim holds here. Re-run incorporating the internal ticket; do not resolve on vendor text alone.
+[2026-10-24T18:28:34.664319+00:00]       Reconciler | revise_draft (incorporating internal ticket) -> ChallengeAgent   | status=ok conf=None retries=1
+    in:  critique received: Resolution relies only on the vendor changelog. The internal ticket is not certain: 'Could not find the current value of auth.legacy_mode in the last two...' - it does not confirm the vendor's claim holds here. Re-run incorporating the internal ticket; do not resolve on vendor text alone.
+    out: resolved=False, severity=CRITICAL - NOT downgraded, internal evidence insufficient
+[2026-10-24T18:28:34.664350+00:00]   ChallengeAgent | approve (nothing to challenge) -> Reporter         | status=approved conf=None retries=0
+    in:  Reconciler's first draft already did not claim resolution
+    out: Confirmed unresolved - flag for human review
+[2026-10-24T18:28:34.664387+00:00]         Reporter | write_report (sample-mode template) -> -                | status=ok conf=low - unresolved, human review required retries=0
+    in:  final decision for CVE-2024-8888: resolved=False
+    out: CVE: CVE-2024-8888 NVD baseline: CRITICAL (CVSS 9.3) Final assessment: CRITICAL - NOT downgraded, internal evidence insu...
+
+--- REPORT ---
+CVE: CVE-2024-8888
+NVD baseline: CRITICAL (CVSS 9.3)
+Final assessment: CRITICAL - NOT downgraded, internal evidence insufficient
+Confidence: low - unresolved, human review required
+Revisions during review: 1
+
+Evidence path:
+  - NVD: An authentication bypass in ExampleAuth 2.x allows an attacker to forge a session token when the legacy compatibility mode is enabled.
+  - Vendor changelog: Legacy compatibility mode (auth.legacy_mode) has been off by default since 2.4, released 14 months ago. Deployments upgraded from a pre-2.4 install may still have it enabled from an old config file that was never cleaned up.
+  - Internal ticket: auth-service was originally deployed on ExampleAuth 2.1 and upgraded in place three times since. Could not find the current value of auth.legacy_mode in the last two deploy logs; the config management repo shows the flag was set to true in an old commit from the 2.1 era but no later commit changes or confirms it. No one on the team has confirmed the live value yet.
+
+Conclusion: NOT resolved. The evidence does not show that the issue is fixed or safe in this environment; the section 'What would resolve this' names what is missing. Treat it as unresolved, and do not downgrade urgency, until a person has verified it.
+
+--- WHAT WOULD RESOLVE THIS ---
+1. Internal: the text itself says something is unconfirmed ('Could not find the current value of auth.legacy_mode in the last two...'). Verify that item directly.
+2. Vendor: it carries an exception ('Deployments upgraded from a pre-2.4 install may still have it enabled from an old config file that was never cleaned up.'). Confirm the exception does not apply to our systems.
+--- EVIDENCE TRAIL (Meterless World Model) ---
+Baseline: CRITICAL (from NVD-style entry).
+Remediation belief taken from: Ticket OPS-5301 (synthetic) (observed 2026-10-24, run run_dd4a8d9a20d5).
+  - auth-service was originally deployed on ExampleAuth 2.1 and upgraded in place three tim...
+  superseded: ExampleAuth security advisory (synthetic) - Legacy compatibility mode (auth.legacy_mode) has been off by default since 2.4, release...
+Policy: source-priority (internal_ticket > nvd > vendor_changelog). Record: 24 events, 22 audit entries (full log: logs/CVE-2024-8888_meterless.jsonl).
+
+--- EXPLOITATION SIGNAL ---
+No exploitation signal recorded for this case. That means UNKNOWN, not 'not exploited'.
+It does not change the verdict above.
+
+--- DATA LAYER ---
+Zetaris: SQL on Zetaris view vuln.signals (LEFT JOIN of three views over REST tables):
+  nvd_*     <- vuln.nvd_entries     <- REST /nvd     (NVD entry)
+  vendor_*  <- vuln.vendor_entries  <- REST /vendor  (vendor changelog)
+  ticket_*  <- vuln.ticket_entries  <- REST /tickets (internal ticket)
+  SELECT 25 columns FROM vuln.signals WHERE cve_id IN ('CVE-2024-8888') ORDER BY cve_id
+  A source whose columns are NULL is treated as absent (not as empty).
+  Second query: exploitation signal from vuln.exploit_entries <- REST /exploitation (no row = unknown, not 'safe').
+
+--- MODE: rule-based (no AI model) ---
+Deterministic and quiet: no false alarms in our test set, but it misses hedges worded in ways
+its rules do not know. An AI mode exists (--provider ollama): on our test half it caught 53 of 56
+unusual hedges (rules: 1) but wrongly flagged 9-10 of 86 clear statements as uncertain. See SETUP.md.
+
+[2026-10-24T18:28:34.665051+00:00]     SourceMapper | data_layer             -> Reconciler       | status=ok conf=None retries=0
+    in:  case CVE-2024-9999
+    out: Zetaris: SQL on Zetaris view vuln.signals (LEFT JOIN of three views over REST tables):
+  nvd_*     <- vuln.nvd_entries     <- REST /nvd     (NVD entry)
+  vendor_*  <- vuln.vendor_entries  <- REST /vendor  (vendor changelog)
+  ticket_*  <- vuln.ticket_entries  <- REST /tickets (internal ticket)
+  SELECT 25 columns FROM vuln.signals WHERE cve_id IN ('CVE-2024-9999') ORDER BY cve_id
+  A source whose columns are NULL is treated as absent (not as empty).
+  Second query: exploitation signal from vuln.exploit_entries <- REST /exploitation (no row = unknown, not 'safe').
+
+======================================================================
+CASE: CVE-2024-9999 (SYNTHETIC EXAMPLE - fully resolved, severity downgraded)
+======================================================================
+[2026-10-24T18:28:34.665202+00:00]     SourceMapper | map_sources            -> Reconciler       | status=ok conf=None retries=0
+    in:  3 raw sources for CVE-2024-9999
+    out: 3 normalised claims; certainty={'nvd': 'high (keyword-fallback)', 'vendor_changelog': 'low (implicit-hedge-override)', 'internal_ticket': 'high (keyword-fallback)'}
+[2026-10-24T18:28:34.717804+00:00]     SourceMapper | build_world_model (Meterless schema) -> Reconciler       | status=ok conf=None retries=0
+    in:  3 claims for CVE-2024-9999
+    out: 4 Entities, 3 Edges (1 davon mit confidence<0.5) -> logs/CVE-2024-9999_world_model.json
+[2026-10-24T18:28:34.717848+00:00]     SourceMapper | meterless_engine       -> Reconciler       | status=ok conf=None retries=0
+    in:  3 claims as facts/relations for CVE-2024-9999
+    out: Meterless engine on node v24.19.0: 'remediation_status': internal_ticket wins over vendor_changelog (conflict policy source-priority); id parity 4/4; 24 events
+[2026-10-24T18:28:34.718843+00:00]       Reconciler | build_draft (vendor-only, optimistic) -> ChallengeAgent   | status=ok conf=None retries=0
+    in:  vendor claim for CVE-2024-9999: 'The admin reporting endpoint is bound to 127.0.0.1 by default since 4....'
+    out: resolved=True, severity=downgraded (per vendor default)
+[2026-10-24T18:28:34.718885+00:00]   ChallengeAgent | approve (internal ticket independently confirms) -> Reporter         | status=approved conf=None retries=0
+    in:  internal ticket certainty=high, text: 'Pulled the running config from all three ExampleCMS instances (web-a, web-b, web-c). admin...'
+    out: Vendor claim independently confirmed by internal evidence - resolved
+[2026-10-24T18:28:34.718923+00:00]         Reporter | write_report (sample-mode template) -> -                | status=ok conf=high retries=0
+    in:  final decision for CVE-2024-9999: resolved=True
+    out: CVE: CVE-2024-9999 NVD baseline: HIGH (CVSS 8.1) Final assessment: downgraded (vendor default confirmed by internal chec...
+
+--- REPORT ---
+CVE: CVE-2024-9999
+NVD baseline: HIGH (CVSS 8.1)
+Final assessment: downgraded (vendor default confirmed by internal check)
+Confidence: high
+Revisions during review: 0
+
+Evidence path:
+  - NVD: A crafted request to the admin reporting endpoint of ExampleCMS 4.x can trigger a denial of service when the endpoint is reachable from an untrusted network.
+  - Vendor changelog: The admin reporting endpoint is bound to 127.0.0.1 by default since 4.5 and is not reachable from any network interface unless an operator explicitly sets admin.reporting.bind_all=true in the config file.
+  - Internal ticket: Pulled the running config from all three ExampleCMS instances (web-a, web-b, web-c). admin.reporting.bind_all is absent (default) on all three, confirmed via config dump dated this week. No instance exposes the endpoint externally.
+
+Conclusion: the vendor's stated default is independently confirmed by the internal ticket. Downgrade accepted.
+--- EVIDENCE TRAIL (Meterless World Model) ---
+Baseline: HIGH (from NVD-style entry).
+Remediation belief taken from: Ticket OPS-5190 (synthetic) (observed 2026-10-24, run run_87b189ab98b6).
+  - Pulled the running config from all three ExampleCMS instances (web-a, web-b, web-c). ad...
+  superseded: ExampleCMS release notes 4.6.2 (synthetic) - The admin reporting endpoint is bound to 127.0.0.1 by default since 4.5 and is not reac...
+Policy: source-priority (internal_ticket > nvd > vendor_changelog). Record: 24 events, 22 audit entries (full log: logs/CVE-2024-9999_meterless.jsonl).
+
+--- EXPLOITATION SIGNAL ---
+No exploitation signal recorded for this case. That means UNKNOWN, not 'not exploited'.
+It does not change the verdict above.
+
+--- DATA LAYER ---
+Zetaris: SQL on Zetaris view vuln.signals (LEFT JOIN of three views over REST tables):
+  nvd_*     <- vuln.nvd_entries     <- REST /nvd     (NVD entry)
+  vendor_*  <- vuln.vendor_entries  <- REST /vendor  (vendor changelog)
+  ticket_*  <- vuln.ticket_entries  <- REST /tickets (internal ticket)
+  SELECT 25 columns FROM vuln.signals WHERE cve_id IN ('CVE-2024-9999') ORDER BY cve_id
+  A source whose columns are NULL is treated as absent (not as empty).
+  Second query: exploitation signal from vuln.exploit_entries <- REST /exploitation (no row = unknown, not 'safe').
+
+--- MODE: rule-based (no AI model) ---
+Deterministic and quiet: no false alarms in our test set, but it misses hedges worded in ways
+its rules do not know. An AI mode exists (--provider ollama): on our test half it caught 53 of 56
+unusual hedges (rules: 1) but wrongly flagged 9-10 of 86 clear statements as uncertain. See SETUP.md.
+
+
+TRIAGE - most urgent first
+ #  CVE             baseline  decision    why
+--------------------------------------------------------------------------------------------------------------
+ 1  CVE-2021-44228  CRITICAL  unresolved  CRITICAL, EXPLOITED, unresolved: internal - unconfirmed item; vendor - carries an exception
+ 2  CVE-2017-5638   CRITICAL  unresolved  CRITICAL, EXPLOITED, unresolved: internal - unconfirmed item
+ 3  CVE-2014-0160   HIGH      unresolved  HIGH, EXPLOITED, unresolved: internal - work still pending
+ 4  CVE-2024-7002   HIGH      unresolved  HIGH, EXPLOITED, unresolved: vendor - no vendor statement
+ 5  CVE-2024-8888   CRITICAL  unresolved  CRITICAL, unresolved: internal - unconfirmed item; vendor - carries an exception
+ 6  CVE-2024-7003   CRITICAL  unresolved  CRITICAL, unresolved: internal - no check recorded; vendor - no vendor statement
+ 7  CVE-2024-7001   HIGH      unresolved  HIGH, unresolved: internal - no check recorded
+ 8  CVE-2023-0002   HIGH      unresolved  HIGH, unresolved: internal - only partly confirmed; vendor - no fix or safe-by-default claim
+ 9  CVE-2023-0004   HIGH      unresolved  HIGH, unresolved: vendor - claim broader than backed
+10  CVE-2022-22965  CRITICAL  resolved    resolved: vendor claim and internal evidence agree (known to be exploited: confirm the fix is deployed)
+11  CVE-2023-0003   CRITICAL  resolved    resolved: vendor claim and internal evidence agree
+12  CVE-2023-0005   HIGH      resolved    resolved: vendor claim and internal evidence agree
+13  CVE-2024-9999   HIGH      resolved    resolved: vendor claim and internal evidence agree
+14  CVE-2023-0001   HIGH      resolved    resolved: vendor claim and internal evidence agree
+TIMELINE CVE-2017-5638 - Apache Struts, the Equifax pattern: how the picture changes day by day
+  (Simulated timeline. The NVD record and the Apache advisory are real (summarised/paraphrased); the dates and the internal tickets are invented for this demo.)
+day  date        decision    event / why
+--------------------------------------------------------------------------------------------------------------
+  0  2026-10-24  unresolved  Public database entry appears
+                           internal - no check recorded; vendor - no vendor statement
+  1  2026-10-24  unresolved  Apache announces fixed versions
+                           internal - no check recorded
+  4  2026-10-24  unresolved  Internal scan: 13 of 14 applications confirmed, the dispute portal is not
+                           internal - unconfirmed item
+  9  2026-10-24  resolved    Dispute portal upgraded and re-tested  <- changed
+                           resolved: vendor fix confirmed by the internal ticket
+Meterless engine on node v24.19.0: every evidence source existed exactly from its first day (time-travel check agrees, 13/13); 12 events logged
+TIMELINE CVE-2022-22965 - Spring4Shell: a patch rollout that finishes
+  (Simulated timeline. The NVD record and the Spring announcement are real (summarised/paraphrased); the dates and the internal tickets are invented for this demo.)
+day  date        decision    event / why
+--------------------------------------------------------------------------------------------------------------
+  0  2026-10-24  unresolved  Public database entry appears
+                           internal - no check recorded; vendor - no vendor statement
+  1  2026-10-24  unresolved  Spring releases fixed versions
+                           internal - no check recorded
+  3  2026-10-24  unresolved  Inventory: 7 of 9 services already on a fixed version
+                           internal - work still pending
+  5  2026-10-24  resolved    The last two services upgraded and re-tested  <- changed
+                           resolved: vendor fix confirmed by the internal ticket
+Meterless engine on node v24.19.0: every evidence source existed exactly from its first day (time-travel check agrees, 13/13); 12 events logged
+
+14 case(s) processed. Logs are in logs/.

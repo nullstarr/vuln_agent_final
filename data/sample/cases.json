@@ -1,0 +1,540 @@
+{
+  "CVE-2021-44228": {
+    "cve_id": "CVE-2021-44228",
+    "nickname": "Log4Shell",
+    "sources": {
+      "nvd": {
+        "source_type": "public_vulnerability_database",
+        "source_name": "NVD (National Vulnerability Database)",
+        "is_real_public_data": true,
+        "note": "Summarised from public, widely-published NVD/CVE records for CVE-2021-44228. Not a live API call.",
+        "cvss_v3_score": 10.0,
+        "severity": "CRITICAL",
+        "description": "Apache Log4j2 JNDI features used in configuration, log messages, and parameters do not protect against attacker-controlled LDAP and other JNDI related endpoints. An attacker who can control log messages or log message parameters can execute arbitrary code loaded from LDAP servers when message lookup substitution is enabled.",
+        "affected_versions": "log4j-core 2.0-beta9 through 2.14.1",
+        "fixed_version": "2.17.1",
+        "auth_required": false,
+        "user_interaction_required": false,
+        "attack_vector": "network"
+      },
+      "vendor_changelog": {
+        "source_type": "vendor_changelog",
+        "source_name": "Internal fork changelog, entry from 2021-11-02",
+        "is_real_public_data": false,
+        "note": "SYNTHETIC - invented for this demo, not a real vendor document.",
+        "text": "v2.14.1-internal-3: Disabled JNDI message lookups by default at startup via log4j2.formatMsgNoLookups=true, set in our base container image since the October hardening pass. Applications that do not override this system property are not affected by remote lookup substitution."
+      },
+      "internal_ticket": {
+        "source_type": "internal_ticket",
+        "source_name": "Ticket OPS-4821, filed 2021-12-10",
+        "is_real_public_data": false,
+        "note": "SYNTHETIC - invented for this demo, not a real internal record.",
+        "text": "Checked prod-cluster-3 and prod-cluster-4 following the Log4j advisory. Both are running the hardened base image with formatMsgNoLookups=true confirmed via env dump. prod-cluster-1 and prod-cluster-2 were migrated to a customer-managed image in October per MIGRATION-217 and do not inherit our base image hardening; lookup setting on those two clusters is unconfirmed as of this ticket."
+      }
+    },
+    "expected_conflict": "Vendor changelog claims the whole fleet is protected by default. Internal ticket shows two of four clusters were migrated off the hardened base image and their setting is unconfirmed, contradicting the blanket 'not affected' framing.",
+    "expected_outcome": "unresolved",
+    "as_of": "2026-10-24",
+    "exploitation": {
+      "source_name": "CISA Known Exploited Vulnerabilities catalog",
+      "source_type": "exploitation_signal",
+      "is_real_public_data": true,
+      "note": "Recorded from the public catalog listing; the listing date was not recorded here. Verify at cisa.gov before relying on it.",
+      "exploited_in_wild": true,
+      "detail": "CVE-2021-44228 (Log4Shell) is listed in the CISA Known Exploited Vulnerabilities catalog."
+    }
+  },
+  "CVE-2024-9999": {
+    "cve_id": "CVE-2024-9999",
+    "nickname": "SYNTHETIC EXAMPLE - fully resolved, severity downgraded",
+    "sources": {
+      "nvd": {
+        "source_type": "public_vulnerability_database",
+        "source_name": "NVD-style entry",
+        "is_real_public_data": false,
+        "note": "SYNTHETIC - this CVE ID and record are invented for this demo.",
+        "cvss_v3_score": 8.1,
+        "severity": "HIGH",
+        "description": "A crafted request to the admin reporting endpoint of ExampleCMS 4.x can trigger a denial of service when the endpoint is reachable from an untrusted network.",
+        "affected_versions": "ExampleCMS 4.0 through 4.6",
+        "fixed_version": "4.7",
+        "auth_required": false,
+        "user_interaction_required": false,
+        "attack_vector": "network"
+      },
+      "vendor_changelog": {
+        "source_type": "vendor_changelog",
+        "source_name": "ExampleCMS release notes 4.6.2 (synthetic)",
+        "is_real_public_data": false,
+        "note": "SYNTHETIC - invented for this demo.",
+        "text": "The admin reporting endpoint is bound to 127.0.0.1 by default since 4.5 and is not reachable from any network interface unless an operator explicitly sets admin.reporting.bind_all=true in the config file."
+      },
+      "internal_ticket": {
+        "source_type": "internal_ticket",
+        "source_name": "Ticket OPS-5190 (synthetic)",
+        "is_real_public_data": false,
+        "note": "SYNTHETIC - invented for this demo.",
+        "text": "Pulled the running config from all three ExampleCMS instances (web-a, web-b, web-c). admin.reporting.bind_all is absent (default) on all three, confirmed via config dump dated this week. No instance exposes the endpoint externally."
+      }
+    },
+    "expected_conflict": "NVD's network-reachable framing assumes the risky setting is in play. Vendor and internal evidence agree the default is safe and confirmed unchanged on every instance.",
+    "expected_outcome": "resolved_downgrade",
+    "as_of": "2026-10-24"
+  },
+  "CVE-2024-8888": {
+    "cve_id": "CVE-2024-8888",
+    "nickname": "SYNTHETIC EXAMPLE - unresolved conflict",
+    "sources": {
+      "nvd": {
+        "source_type": "public_vulnerability_database",
+        "source_name": "NVD-style entry",
+        "is_real_public_data": false,
+        "note": "SYNTHETIC - this CVE ID and record are invented for this demo.",
+        "cvss_v3_score": 9.3,
+        "severity": "CRITICAL",
+        "description": "An authentication bypass in ExampleAuth 2.x allows an attacker to forge a session token when the legacy compatibility mode is enabled.",
+        "affected_versions": "ExampleAuth 2.0 through 2.9",
+        "fixed_version": "2.10",
+        "auth_required": false,
+        "user_interaction_required": false,
+        "attack_vector": "network"
+      },
+      "vendor_changelog": {
+        "source_type": "vendor_changelog",
+        "source_name": "ExampleAuth security advisory (synthetic)",
+        "is_real_public_data": false,
+        "note": "SYNTHETIC - invented for this demo.",
+        "text": "Legacy compatibility mode (auth.legacy_mode) has been off by default since 2.4, released 14 months ago. Deployments upgraded from a pre-2.4 install may still have it enabled from an old config file that was never cleaned up."
+      },
+      "internal_ticket": {
+        "source_type": "internal_ticket",
+        "source_name": "Ticket OPS-5301 (synthetic)",
+        "is_real_public_data": false,
+        "note": "SYNTHETIC - invented for this demo.",
+        "text": "auth-service was originally deployed on ExampleAuth 2.1 and upgraded in place three times since. Could not find the current value of auth.legacy_mode in the last two deploy logs; the config management repo shows the flag was set to true in an old commit from the 2.1 era but no later commit changes or confirms it. No one on the team has confirmed the live value yet."
+      }
+    },
+    "expected_conflict": "Vendor evidence describes the safe default and names exactly the risky scenario (upgraded-in-place deployments with old config). Internal evidence confirms this deployment matches that risky scenario but cannot confirm the current flag value either way.",
+    "expected_outcome": "unresolved",
+    "as_of": "2026-10-24"
+  },
+  "CVE-2023-0001": {
+    "cve_id": "CVE-2023-0001",
+    "nickname": "SYNTHETIC EXAMPLE - unconditional confirmation, no caveats",
+    "sources": {
+      "nvd": {
+        "source_type": "public_vulnerability_database",
+        "source_name": "NVD-style entry",
+        "is_real_public_data": false,
+        "note": "SYNTHETIC - invented for this demo.",
+        "cvss_v3_score": 7.5,
+        "severity": "HIGH",
+        "description": "A maliciously crafted archive can cause ExampleParser to allocate unbounded memory, allowing an attacker to exhaust available system memory and crash the service.",
+        "affected_versions": "ExampleParser 1.0 through 3.4",
+        "fixed_version": "3.5",
+        "auth_required": false,
+        "user_interaction_required": false,
+        "attack_vector": "network"
+      },
+      "vendor_changelog": {
+        "source_type": "vendor_changelog",
+        "source_name": "ExampleParser release notes 3.5 (synthetic)",
+        "is_real_public_data": false,
+        "note": "SYNTHETIC - invented for this demo.",
+        "text": "The unbounded allocation path has been completely removed from the codebase in 3.5. This was verified by our own security team through a full code audit on 2024-01-15, with no remaining code path that can trigger it."
+      },
+      "internal_ticket": {
+        "source_type": "internal_ticket",
+        "source_name": "Ticket OPS-6010 (synthetic)",
+        "is_real_public_data": false,
+        "note": "SYNTHETIC - invented for this demo.",
+        "text": "Ran the automated compliance scan across all 12 production instances on 2024-06-01. All 12 report ExampleParser version 3.5.2. Zero exceptions, zero instances pending update."
+      }
+    },
+    "expected_conflict": "None - all three sources agree without qualification.",
+    "expected_outcome": "resolved_downgrade",
+    "as_of": "2026-10-24"
+  },
+  "CVE-2023-0002": {
+    "cve_id": "CVE-2023-0002",
+    "nickname": "SYNTHETIC EXAMPLE - clearly hedged on both sides",
+    "sources": {
+      "nvd": {
+        "source_type": "public_vulnerability_database",
+        "source_name": "NVD-style entry",
+        "is_real_public_data": false,
+        "note": "SYNTHETIC - invented for this demo.",
+        "cvss_v3_score": 8.6,
+        "severity": "HIGH",
+        "description": "An out-of-bounds read in ExampleCodec allows an attacker to leak adjacent heap memory via a crafted media file.",
+        "affected_versions": "ExampleCodec 2.0 through 2.8",
+        "fixed_version": "2.9",
+        "auth_required": false,
+        "user_interaction_required": true,
+        "attack_vector": "network"
+      },
+      "vendor_changelog": {
+        "source_type": "vendor_changelog",
+        "source_name": "ExampleCodec advisory (synthetic)",
+        "is_real_public_data": false,
+        "note": "SYNTHETIC - invented for this demo.",
+        "text": "We believe this may already be mitigated by the sandboxing layer introduced in 2.6, but we have not formally verified this interaction and cannot yet confirm it closes the gap."
+      },
+      "internal_ticket": {
+        "source_type": "internal_ticket",
+        "source_name": "Ticket OPS-6033 (synthetic)",
+        "is_real_public_data": false,
+        "note": "SYNTHETIC - invented for this demo.",
+        "text": "Only checked 2 of our 15 edge nodes so far. Both were on 2.7 without the sandbox flag enabled. The remaining 13 are scheduled for next week's maintenance window and have not been checked."
+      }
+    },
+    "expected_conflict": "Vendor is openly unsure about its own mitigation; internal check covers only 2 of 15 nodes.",
+    "expected_outcome": "unresolved",
+    "as_of": "2026-10-24"
+  },
+  "CVE-2023-0003": {
+    "cve_id": "CVE-2023-0003",
+    "nickname": "SYNTHETIC EXAMPLE - heavy capability language, still fully resolved",
+    "sources": {
+      "nvd": {
+        "source_type": "public_vulnerability_database",
+        "source_name": "NVD-style entry",
+        "is_real_public_data": false,
+        "note": "SYNTHETIC - invented for this demo.",
+        "cvss_v3_score": 9.1,
+        "severity": "CRITICAL",
+        "description": "A path traversal flaw in ExampleFileServer allows a remote attacker to read arbitrary files outside the served directory, which can then be used to exfiltrate credentials or configuration secrets.",
+        "affected_versions": "ExampleFileServer 1.0 through 1.9",
+        "fixed_version": "1.10",
+        "auth_required": false,
+        "user_interaction_required": false,
+        "attack_vector": "network"
+      },
+      "vendor_changelog": {
+        "source_type": "vendor_changelog",
+        "source_name": "ExampleFileServer release notes 1.10 (synthetic)",
+        "is_real_public_data": false,
+        "note": "SYNTHETIC - invented for this demo.",
+        "text": "Path traversal is fully closed in 1.10 through strict canonical-path validation with no exceptions or opt-outs. Every request path is checked against the same validation regardless of configuration."
+      },
+      "internal_ticket": {
+        "source_type": "internal_ticket",
+        "source_name": "Ticket OPS-6050 (synthetic)",
+        "is_real_public_data": false,
+        "note": "SYNTHETIC - invented for this demo.",
+        "text": "Automated fleet inventory confirms all 8 ExampleFileServer instances are on 1.10.1 as of this morning's scan. No instance is pinned to an older version."
+      }
+    },
+    "expected_conflict": "None - the NVD description uses strong capability language ('allows', 'can then be used to') but this is standard descriptive style, not uncertainty; vendor and internal evidence both fully confirm the fix.",
+    "expected_outcome": "resolved_downgrade",
+    "as_of": "2026-10-24"
+  },
+  "CVE-2023-0004": {
+    "cve_id": "CVE-2023-0004",
+    "nickname": "SYNTHETIC EXAMPLE - scope trap: sounds fully confident, quietly narrower than claimed",
+    "sources": {
+      "nvd": {
+        "source_type": "public_vulnerability_database",
+        "source_name": "NVD-style entry",
+        "is_real_public_data": false,
+        "note": "SYNTHETIC - invented for this demo.",
+        "cvss_v3_score": 7.4,
+        "severity": "HIGH",
+        "description": "A TLS renegotiation flaw in ExampleGateway allows a man-in-the-middle attacker to downgrade the negotiated cipher suite and intercept traffic.",
+        "affected_versions": "ExampleGateway 3.0 through 3.6",
+        "fixed_version": "3.7",
+        "auth_required": false,
+        "user_interaction_required": false,
+        "attack_vector": "network"
+      },
+      "vendor_changelog": {
+        "source_type": "vendor_changelog",
+        "source_name": "ExampleGateway advisory (synthetic)",
+        "is_real_public_data": false,
+        "note": "SYNTHETIC - invented for this demo. TRAP CASE: no hedge word anywhere - the overclaim is the gap between 'fully addresses' and the narrower thing actually described.",
+        "text": "All internet-facing load balancers now enforce the patched TLS configuration. This fully addresses the vulnerability described in the advisory."
+      },
+      "internal_ticket": {
+        "source_type": "internal_ticket",
+        "source_name": "Ticket OPS-6120 (synthetic)",
+        "is_real_public_data": false,
+        "note": "SYNTHETIC - invented for this demo. Deliberately precise, not hedged - it correctly names the same scope limit the vendor glossed over.",
+        "text": "Confirmed all 4 internet-facing load balancers run the patched TLS stack as of this week's scan. Internal service-mesh traffic between backend pods does not pass through these load balancers and uses a separate TLS implementation, outside this patch cycle."
+      }
+    },
+    "expected_conflict": "Vendor says 'fully addresses the vulnerability' but only describes internet-facing load balancers; internal ticket - stated with full confidence, not hedged - shows backend service-mesh traffic uses a different TLS stack entirely outside the patch. The trap: no hedge word appears anywhere, the gap is the mismatch between the vendor's broad claim and its actually narrower scope.",
+    "expected_outcome": "unresolved",
+    "as_of": "2026-10-24"
+  },
+  "CVE-2023-0005": {
+    "cve_id": "CVE-2023-0005",
+    "nickname": "SYNTHETIC EXAMPLE - reverse trap: conditional wording, but fully verified",
+    "sources": {
+      "nvd": {
+        "source_type": "public_vulnerability_database",
+        "source_name": "NVD-style entry",
+        "is_real_public_data": false,
+        "note": "SYNTHETIC - invented for this demo.",
+        "cvss_v3_score": 8.2,
+        "severity": "HIGH",
+        "description": "A path traversal flaw in ExampleUploader allows a remote attacker to write files outside the intended upload directory via a crafted filename.",
+        "affected_versions": "ExampleUploader 2.0 through 2.5",
+        "fixed_version": "2.6",
+        "auth_required": false,
+        "user_interaction_required": false,
+        "attack_vector": "network"
+      },
+      "vendor_changelog": {
+        "source_type": "vendor_changelog",
+        "source_name": "ExampleUploader release notes 2.6 (synthetic)",
+        "is_real_public_data": false,
+        "note": "SYNTHETIC - invented for this demo.",
+        "text": "Filename validation was rewritten in 2.6 to canonicalize every path before any file write. This closes the traversal vector entirely, with no configuration flag able to re-enable the old behaviour."
+      },
+      "internal_ticket": {
+        "source_type": "internal_ticket",
+        "source_name": "Ticket OPS-6144 (synthetic)",
+        "is_real_public_data": false,
+        "note": "SYNTHETIC - invented for this demo. TRAP CASE: the 'if...then' phrasing describes the FIX MECHANISM, not doubt about whether it happened - the verification itself is complete and current.",
+        "text": "If a filename contains a '../' sequence, the updated validator now rejects it before it reaches the filesystem layer. We replayed all 40 known bypass payloads from the original disclosure against all 6 production instances in today's automated regression run; zero payloads passed."
+      }
+    },
+    "expected_conflict": "None once read carefully - the internal ticket's 'if...then' phrasing describes HOW the fix works, not uncertainty about whether it was checked. The verification itself (all 6 instances, all 40 payloads, today, zero passed) is complete. CORRECTED: an independent naive single-shot LLM comparison (baseline_naive.py) consistently judged this case as resolved too, which exposed that this project's own keyword-based safety check (_vendor_suggests_safe in reconciler.py) was too narrow and had been wrongly forcing this case to 'unresolved'. Fixed by broadening that keyword list.",
+    "expected_outcome": "resolved_downgrade",
+    "as_of": "2026-10-24"
+  },
+  "CVE-2017-5638": {
+    "cve_id": "CVE-2017-5638",
+    "nickname": "Apache Struts RCE - the flaw behind the 2017 Equifax breach (147M records)",
+    "sources": {
+      "nvd": {
+        "source_type": "public_vulnerability_database",
+        "source_name": "NVD (National Vulnerability Database)",
+        "is_real_public_data": true,
+        "note": "Summarised from real, widely published NVD/CVE records for CVE-2017-5638. Not a live API call.",
+        "cvss_v3_score": 9.8,
+        "severity": "CRITICAL",
+        "description": "The Jakarta Multipart parser in Apache Struts 2 has incorrect exception handling and error-message generation during file-upload attempts, allowing a remote attacker to execute arbitrary commands via a crafted Content-Type, Content-Disposition, or Content-Length HTTP header.",
+        "affected_versions": "Apache Struts 2.3.5 through 2.3.31, and 2.5 through 2.5.10",
+        "fixed_version": "2.3.32 or 2.5.10.1",
+        "auth_required": false,
+        "user_interaction_required": false,
+        "attack_vector": "network"
+      },
+      "vendor_changelog": {
+        "source_type": "vendor_changelog",
+        "source_name": "Apache Struts security advisory S2-045 (real advisory, paraphrased)",
+        "is_real_public_data": true,
+        "note": "Paraphrased from the real, public Apache advisory for S2-045 - not verbatim, but the guidance itself (upgrade only, no config workaround) is accurately represented.",
+        "text": "Upgrade to Struts 2.3.32 or 2.5.10.1 immediately. There is no configuration workaround for this vulnerability - disabling the Jakarta-based file upload interceptor is the only partial mitigation short of upgrading, and does not fully close the flaw."
+      },
+      "internal_ticket": {
+        "source_type": "internal_ticket",
+        "source_name": "Ticket OPS-3390 (synthetic)",
+        "is_real_public_data": false,
+        "note": "SYNTHETIC - invented for this demo, styled after the real, publicly documented pattern of the Equifax breach (a single missed customer-facing application among an otherwise-patched fleet).",
+        "text": "Dependency scan across all 14 customer-facing applications: 13 are confirmed on struts-core 2.5.16 or later. The customer dispute-portal application was flagged for decommissioning in Q1 and excluded from the upgrade sprint; no one has confirmed whether it was later included in a follow-up pass, and its retirement ticket has no target date."
+      }
+    },
+    "expected_conflict": "Vendor evidence is unambiguous (upgrade only, no workaround) - the disagreement is entirely about OUR OWN environment: 13 of 14 applications confirmed patched, but the one exception (the dispute portal) is exactly the kind of gap that caused the real Equifax breach, and its status is explicitly unconfirmed.",
+    "expected_outcome": "unresolved",
+    "as_of": "2026-10-24",
+    "exploitation": {
+      "source_name": "CISA Known Exploited Vulnerabilities catalog",
+      "source_type": "exploitation_signal",
+      "is_real_public_data": true,
+      "note": "Recorded from the public catalog listing; the listing date was not recorded here. Verify at cisa.gov before relying on it.",
+      "exploited_in_wild": true,
+      "detail": "CVE-2017-5638 (Apache Struts) is listed in the CISA Known Exploited Vulnerabilities catalog."
+    }
+  },
+  "CVE-2024-7001": {
+    "cve_id": "CVE-2024-7001",
+    "nickname": "SYNTHETIC - vendor fix is strong, but nobody internally has checked yet",
+    "sources": {
+      "nvd": {
+        "source_type": "public_vulnerability_database",
+        "source_name": "NVD-style entry",
+        "is_real_public_data": false,
+        "note": "SYNTHETIC - invented for this demo.",
+        "cvss_v3_score": 8.8,
+        "severity": "HIGH",
+        "description": "A deserialization flaw in ExampleQueue allows a remote attacker to execute arbitrary code via a crafted message payload.",
+        "affected_versions": "ExampleQueue 3.0 through 3.4",
+        "fixed_version": "3.5",
+        "auth_required": false,
+        "user_interaction_required": false,
+        "attack_vector": "network"
+      },
+      "vendor_changelog": {
+        "source_type": "vendor_changelog",
+        "source_name": "ExampleQueue security advisory (synthetic)",
+        "is_real_public_data": false,
+        "note": "SYNTHETIC - a genuinely strong, unconditional vendor fix, on purpose.",
+        "text": "Unsafe deserialization is disabled by default in 3.5 and the vulnerable code path has been completely removed from the codebase. There is no configuration that re-enables the old behaviour."
+      }
+    },
+    "expected_conflict": "The vendor fix is as strong as it gets, but no internal confirmation exists at all - the system must still refuse to call this resolved.",
+    "expected_outcome": "unresolved",
+    "as_of": "2026-10-24",
+    "exploitation": {
+      "source_name": "Simulated threat feed",
+      "source_type": "exploitation_signal",
+      "is_real_public_data": false,
+      "note": "SYNTHETIC - invented for this demo.",
+      "exploited_in_wild": false,
+      "detail": "The simulated feed was checked and shows no exploitation (as of the case date)."
+    }
+  },
+  "CVE-2024-7002": {
+    "cve_id": "CVE-2024-7002",
+    "nickname": "SYNTHETIC - team checked thoroughly, but the vendor never responded (unmaintained software)",
+    "sources": {
+      "nvd": {
+        "source_type": "public_vulnerability_database",
+        "source_name": "NVD-style entry",
+        "is_real_public_data": false,
+        "note": "SYNTHETIC - invented for this demo.",
+        "cvss_v3_score": 7.5,
+        "severity": "HIGH",
+        "description": "An authentication bypass in ExampleReports allows a remote attacker to access report data without valid credentials.",
+        "affected_versions": "ExampleReports 1.0 through 1.8 (all known versions)",
+        "fixed_version": "none - project unmaintained since 2022",
+        "auth_required": false,
+        "user_interaction_required": false,
+        "attack_vector": "network"
+      },
+      "internal_ticket": {
+        "source_type": "internal_ticket",
+        "source_name": "Ticket OPS-6210 (synthetic)",
+        "is_real_public_data": false,
+        "note": "SYNTHETIC - a genuinely thorough internal mitigation, on purpose.",
+        "text": "Since the vendor is unresponsive, we removed network access to ExampleReports entirely via firewall rule FW-881, verified on all 5 instances this morning - the service is no longer reachable from outside the internal VPN, confirmed with an external port scan showing no response."
+      }
+    },
+    "expected_conflict": "No vendor statement exists at all, but the internal team independently verified a complete network-level mitigation. Tests whether the system can ever reach 'resolved' on internal evidence alone, without any vendor acknowledgment.",
+    "expected_outcome": "unresolved",
+    "as_of": "2026-10-24",
+    "exploitation": {
+      "source_name": "Simulated threat feed",
+      "source_type": "exploitation_signal",
+      "is_real_public_data": false,
+      "note": "SYNTHETIC - invented for this demo.",
+      "exploited_in_wild": true,
+      "detail": "The simulated feed reports exploitation attempts against this flaw."
+    }
+  },
+  "CVE-2024-7003": {
+    "cve_id": "CVE-2024-7003",
+    "nickname": "SYNTHETIC - day one: only the public listing exists, nobody has reacted at all yet",
+    "sources": {
+      "nvd": {
+        "source_type": "public_vulnerability_database",
+        "source_name": "NVD-style entry",
+        "is_real_public_data": false,
+        "note": "SYNTHETIC - invented for this demo.",
+        "cvss_v3_score": 9.0,
+        "severity": "CRITICAL",
+        "description": "A critical remote code execution flaw in ExampleBroker was disclosed today via a security researcher's public write-up.",
+        "affected_versions": "ExampleBroker 5.0 through 5.3 (current)",
+        "fixed_version": "none yet",
+        "auth_required": false,
+        "user_interaction_required": false,
+        "attack_vector": "network"
+      }
+    },
+    "expected_conflict": "Neither the vendor nor the internal team has had time to respond yet - the only thing that exists is the raw public disclosure.",
+    "expected_outcome": "unresolved",
+    "as_of": "2026-10-24"
+  },
+  "CVE-2022-22965": {
+    "cve_id": "CVE-2022-22965",
+    "nickname": "Spring4Shell (real CVE) - fix released, internal verification complete",
+    "sources": {
+      "nvd": {
+        "source_type": "public_vulnerability_database",
+        "source_name": "NVD (National Vulnerability Database)",
+        "is_real_public_data": true,
+        "note": "Summarised from the real, public NVD record for CVE-2022-22965 (as recalled, not a live API call).",
+        "cvss_v3_score": 9.8,
+        "severity": "CRITICAL",
+        "description": "A Spring MVC or Spring WebFlux application running on JDK 9+ may be vulnerable to remote code execution (RCE) via data binding. The specific exploit requires the application to run on Tomcat as a WAR deployment. If the application is deployed as a Spring Boot executable jar, i.e. the default, it is not vulnerable to the exploit. However, the nature of the vulnerability is more general, and there may be other ways to exploit it.",
+        "affected_versions": "Spring Framework 5.3.0 to 5.3.17, 5.2.0 to 5.2.19, and older unsupported versions",
+        "fixed_version": "5.3.18, 5.2.20",
+        "auth_required": false,
+        "user_interaction_required": false,
+        "attack_vector": "network"
+      },
+      "vendor_changelog": {
+        "source_type": "vendor_changelog",
+        "source_name": "Spring Framework security announcement (paraphrased)",
+        "is_real_public_data": true,
+        "note": "Paraphrased from the real public announcement - the guidance (fixed releases, upgrade) is accurate, the wording is not verbatim.",
+        "text": "Spring Framework 5.3.18 and 5.2.20 are available and fix this vulnerability. Users of affected versions should upgrade to 5.3.18 or 5.2.20."
+      },
+      "internal_ticket": {
+        "source_type": "internal_ticket",
+        "source_name": "Ticket OPS-5107 (synthetic)",
+        "is_real_public_data": false,
+        "note": "SYNTHETIC - invented for this demo.",
+        "text": "Inventory run on 2026-10-24 across all 9 Java services: 7 were already on Spring Framework 5.3.18 or later; the 2 legacy reporting services on 5.2.x were upgraded to 5.2.20 on 2026-10-24 and re-tested with the public proof of concept. All 9 now run a fixed version and the proof of concept fails on every one. No exceptions."
+      }
+    },
+    "expected_conflict": "None left: the vendor announces a fix AND the internal ticket confirms it is deployed everywhere, with a re-test. The positive path - without it the system could never say 'resolved' for an ordinary patch release.",
+    "expected_outcome": "resolved_downgrade",
+    "as_of": "2026-10-24",
+    "exploitation": {
+      "source_name": "CISA Known Exploited Vulnerabilities catalog",
+      "source_type": "exploitation_signal",
+      "is_real_public_data": true,
+      "note": "Recorded from the public catalog listing; the listing date was not recorded here. Verify at cisa.gov before relying on it.",
+      "exploited_in_wild": true,
+      "detail": "CVE-2022-22965 (Spring4Shell) is listed in the CISA Known Exploited Vulnerabilities catalog."
+    }
+  },
+  "CVE-2014-0160": {
+    "cve_id": "CVE-2014-0160",
+    "nickname": "Heartbleed (real CVE) - patched everywhere, but keys not yet re-issued",
+    "sources": {
+      "nvd": {
+        "source_type": "public_vulnerability_database",
+        "source_name": "NVD (National Vulnerability Database)",
+        "is_real_public_data": true,
+        "note": "Summarised from the real, public NVD record for CVE-2014-0160 (as recalled, not a live API call).",
+        "cvss_v3_score": 7.5,
+        "severity": "HIGH",
+        "description": "The TLS and DTLS implementations in OpenSSL 1.0.1 before 1.0.1g do not properly handle Heartbeat Extension packets, which allows remote attackers to obtain sensitive information from process memory via crafted packets that trigger a buffer over-read, as demonstrated by reading private keys, aka the Heartbleed bug.",
+        "affected_versions": "OpenSSL 1.0.1 through 1.0.1f",
+        "fixed_version": "1.0.1g",
+        "auth_required": false,
+        "user_interaction_required": false,
+        "attack_vector": "network"
+      },
+      "vendor_changelog": {
+        "source_type": "vendor_changelog",
+        "source_name": "OpenSSL security advisory (paraphrased)",
+        "is_real_public_data": true,
+        "note": "Paraphrased from the real public advisory - not verbatim.",
+        "text": "Fixed in OpenSSL 1.0.1g. Users of OpenSSL 1.0.1 through 1.0.1f should upgrade to 1.0.1g immediately."
+      },
+      "internal_ticket": {
+        "source_type": "internal_ticket",
+        "source_name": "Ticket OPS-2014-04 (synthetic)",
+        "is_real_public_data": false,
+        "note": "SYNTHETIC - styled after the real lesson of Heartbleed: patching the library does not undo a possible key leak.",
+        "text": "All 40 TLS-terminating servers were upgraded to OpenSSL 1.0.1g and verified with a Heartbleed probe on 2026-10-24. The private keys and certificates of 31 servers have been re-issued; re-issuing the remaining 9 is scheduled for next week."
+      }
+    },
+    "expected_conflict": "The fix is deployed everywhere, but the exposure it leaves behind (possibly leaked keys) is only partly cleaned up - the internal ticket says so itself.",
+    "expected_outcome": "unresolved",
+    "as_of": "2026-10-24",
+    "exploitation": {
+      "source_name": "CISA Known Exploited Vulnerabilities catalog",
+      "source_type": "exploitation_signal",
+      "is_real_public_data": true,
+      "note": "Recorded from the public catalog listing; the listing date was not recorded here. Verify at cisa.gov before relying on it.",
+      "exploited_in_wild": true,
+      "detail": "CVE-2014-0160 (Heartbleed) is listed in the CISA Known Exploited Vulnerabilities catalog."
+    }
+  }
+}

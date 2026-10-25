@@ -1,0 +1,19 @@
+name: checks
+on: [push, pull_request]
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - uses: actions/setup-node@v4
+        with: {node-version: "20"}
+      - run: pip install -r requirements.txt
+      - name: Run all check scripts (offline, no AI model)
+        env: {LLM_PROVIDER: rule_based}
+        run: |
+          set -e
+          for f in check_expected_outcomes check_missing_sources check_report_guard check_fix_path check_triage check_timeline check_prompt_versions check_meterless_bridge check_byo_cve check_real_world check_zetaris check_meterless_runtime check_nvidia_provider check_robustness check_exploitation; do
+            echo "== $f"; python3 $f.py
+          done

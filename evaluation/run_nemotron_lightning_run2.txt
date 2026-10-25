@@ -1,0 +1,50 @@
+  ... llm: 25/286
+  ... llm: 50/286
+  ... llm: 75/286
+  ... llm: 100/286
+  ... llm: 125/286
+  ... llm: 150/286
+  ... llm: 175/286
+  ... llm: 200/286
+  ... llm: 225/286
+  ... llm: 250/286
+  ... llm: 275/286
+  ... combined: 25/286
+  ... combined: 50/286
+  ... combined: 75/286
+  ... combined: 100/286
+  ... combined: 125/286
+  ... combined: 150/286
+  ... combined: 175/286
+  ... combined: 200/286
+  ... combined: 225/286
+  ... combined: 250/286
+  ... combined: 275/286
+[prompt] CERTAINTY_PROMPT=v2 (applies only to the methods llm and combined)
+[llm] 286 texts in 567.0s
+[combined] 286 texts in 0.0s
+
+==============================================================================
+Method   half    correct    MISSED (dangerous)       FALSE ALARM
+------------------------------------------------------------------------------
+llm       dev          90.3%               3/54 =   5.6%  11/90 =  12.2%
+llm       test         98.6%               2/56 =   3.6%   0/86 =   0.0%
+combined  dev          92.4%               0/54 =   0.0%  11/90 =  12.2%
+combined  test         98.6%               2/56 =   3.6%   0/86 =   0.0%
+==============================================================================
+
+By error type (share classified WRONG; lower is better)
+Category                 target           llm/dev        llm/test    combined/dev   combined/test
+vendor_complete           high             11/30            0/30           11/30            0/30
+internal_complete         high              0/30            0/28            0/30            0/28
+conditional_but_complete  high              0/30            0/28            0/30            0/28
+explicit_hedge            low                0/6            0/13             0/6            0/13
+partial_count             low               0/18            0/13            0/18            0/13
+pending_schedule          low                0/7             0/7             0/7             0/7
+stale                     low                0/6             0/8             0/6             0/8
+inference                 low                0/5             0/3             0/5             0/3
+exception_clause          low                0/3             0/3             0/3             0/3
+scope_overclaim           low                3/3             2/3             0/3             2/3
+gap_named                 low                0/6             0/6             0/6             0/6
+
+gespeichert: evaluation/results_nemotron_lightning_run2.json

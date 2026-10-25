@@ -1,0 +1,1 @@
+Our base image disables JNDI lookups by default (formatMsgNoLookups=true), so applications that do not override it are not affected.

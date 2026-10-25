@@ -1,0 +1,24 @@
+services:
+  vuln-agent:
+    build: .
+    # .env ist OPTIONAL: ohne sie laeuft der Beispielmodus (LLM_PROVIDER=rule_based).
+    # Die Langform mit 'required: false' braucht Docker Compose >= 2.24.
+    env_file:
+      - path: .env
+        required: false
+    # WICHTIG: nur auf nativem Linux (wie Kali) korrekt. Innerhalb eines
+    # Containers meint "localhost" normalerweise den Container selbst,
+    # NICHT den Rechner, auf dem Ollama laeuft - network_mode: host
+    # schaltet das aus, indem der Container das Netzwerk des Rechners
+    # direkt mitbenutzt. Auf Docker Desktop (Mac/Windows) funktioniert
+    # das NICHT genauso; dort muesste OLLAMA_HOST stattdessen auf
+    # http://host.docker.internal:11434 zeigen. Fuer LLM_PROVIDER=
+    # rule_based oder anthropic/openai ist diese Zeile ohnehin egal, die
+    # brauchen kein lokales Netzwerk.
+    network_mode: host
+    volumes:
+      # Protokolle landen auch AUSSERHALB des Containers - ein Pruefer
+      # muss logs/ nicht erst im Container suchen.
+      - ./logs:/app/logs
+    stdin_open: true
+    tty: true

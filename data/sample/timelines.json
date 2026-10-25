@@ -1,0 +1,92 @@
+{
+  "CVE-2017-5638": {
+    "title": "Apache Struts, the Equifax pattern: how the picture changes day by day",
+    "note": "Simulated timeline. The NVD record and the Apache advisory are real (summarised/paraphrased); the dates and the internal tickets are invented for this demo.",
+    "base": "CVE-2017-5638",
+    "days": [
+      {
+        "day": 0,
+        "date": "2026-10-24",
+        "event": "Public database entry appears",
+        "add": {
+          "nvd": "base"
+        }
+      },
+      {
+        "day": 1,
+        "date": "2026-10-25",
+        "event": "Apache announces fixed versions",
+        "add": {
+          "vendor_changelog": "base"
+        }
+      },
+      {
+        "day": 4,
+        "date": "2026-10-26",
+        "event": "Internal scan: 13 of 14 applications confirmed, the dispute portal is not",
+        "add": {
+          "internal_ticket": "base"
+        }
+      },
+      {
+        "day": 9,
+        "date": "2026-10-27",
+        "event": "Dispute portal upgraded and re-tested",
+        "add": {
+          "internal_ticket": {
+            "source_type": "internal_ticket",
+            "source_name": "Ticket OPS-3390 (synthetic)",
+            "is_real_public_data": false,
+            "note": "SYNTHETIC - the follow-up that closes the gap the first scan left open.",
+            "text": "Dependency scan on 2026-10-27 covered all 14 customer-facing applications: all 14 run struts-core 2.5.16 or later. The customer dispute-portal application was upgraded in the October sprint (ticket OPS-3402) and re-tested the same day. No exceptions."
+          }
+        }
+      }
+    ]
+  },
+  "CVE-2022-22965": {
+    "title": "Spring4Shell: a patch rollout that finishes",
+    "note": "Simulated timeline. The NVD record and the Spring announcement are real (summarised/paraphrased); the dates and the internal tickets are invented for this demo.",
+    "base": "CVE-2022-22965",
+    "days": [
+      {
+        "day": 0,
+        "date": "2026-10-24",
+        "event": "Public database entry appears",
+        "add": {
+          "nvd": "base"
+        }
+      },
+      {
+        "day": 1,
+        "date": "2026-10-25",
+        "event": "Spring releases fixed versions",
+        "add": {
+          "vendor_changelog": "base"
+        }
+      },
+      {
+        "day": 3,
+        "date": "2026-10-26",
+        "event": "Inventory: 7 of 9 services already on a fixed version",
+        "add": {
+          "internal_ticket": {
+            "source_type": "internal_ticket",
+            "source_name": "Ticket OPS-5107 (synthetic)",
+            "is_real_public_data": false,
+            "note": "SYNTHETIC - the interim status, before the last two services were upgraded.",
+            "text": "Inventory run on 2026-10-26 across all 9 Java services: 7 are already on Spring Framework 5.3.18 or later. The 2 legacy reporting services are still on 5.2.x; their upgrade to 5.2.20 is scheduled for next week."
+          }
+        }
+      },
+      {
+        "day": 5,
+        "date": "2026-10-27",
+        "event": "The last two services upgraded and re-tested",
+        "add": {
+          "internal_ticket": "base"
+        }
+      }
+    ]
+  }
+}

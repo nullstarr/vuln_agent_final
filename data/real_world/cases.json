@@ -1,0 +1,101 @@
+{
+  "CVE-2024-3400": {
+    "cve_id": "CVE-2024-3400",
+    "nickname": "REAL CVE (PAN-OS GlobalProtect) - real advisory, synthetic ticket",
+    "sources": {
+      "nvd": {
+        "source_type": "public_vulnerability_database",
+        "source_name": "NVD (National Vulnerability Database)",
+        "is_real_public_data": true,
+        "note": "Real NVD record (CVSS and severity read from the NVD API on 2026-10-24). The description is the opening sentence plus a short summary, NOT the full verbatim text; run fetch_real_world.py to replace it with the verbatim NVD text.",
+        "cvss_v3_score": 10.0,
+        "severity": "CRITICAL",
+        "description": "A command injection as a result of arbitrary file creation vulnerability in the GlobalProtect feature of Palo Alto Networks PAN-OS software for specific PAN-OS versions and distinct feature configurations may enable an unauthenticated attacker to execute arbitrary code with root privileges on the firewall.",
+        "attack_vector": "network"
+      },
+      "vendor_changelog": {
+        "source_type": "vendor_changelog",
+        "source_name": "Palo Alto Networks security advisory CVE-2024-3400",
+        "is_real_public_data": true,
+        "note": "REAL vendor text: verbatim fragments (joined by ' ... ') from https://security.paloaltonetworks.com/CVE-2024-3400, read on 2026-10-24. Only the quoted fragments are used.",
+        "text": "This issue is fixed in PAN-OS 10.2.9-h1, PAN-OS 11.0.4-h1, PAN-OS 11.1.2-h3, and in all later PAN-OS versions."
+      },
+      "internal_ticket": {
+        "source_type": "internal_ticket",
+        "source_name": "Ticket NET-3302 (synthetic)",
+        "is_real_public_data": false,
+        "note": "SYNTHETIC - invented for this demo. Nobody publishes real internal tickets.",
+        "text": "Upgraded fw-edge-1 and fw-edge-2 to PAN-OS 11.1.2-h3; version confirmed on both. fw-edge-3 at the branch site is still on an older release and has not been checked yet."
+      }
+    },
+    "expected_conflict": "Vendor names fixed versions; the internal ticket shows one firewall not confirmed.",
+    "expected_outcome": "unresolved",
+    "as_of": "2026-10-24"
+  },
+  "CVE-2024-6387": {
+    "cve_id": "CVE-2024-6387",
+    "nickname": "REAL CVE (OpenSSH regreSSHion) - real advisory, synthetic ticket",
+    "sources": {
+      "nvd": {
+        "source_type": "public_vulnerability_database",
+        "source_name": "NVD (National Vulnerability Database)",
+        "is_real_public_data": true,
+        "note": "Real NVD record (CVSS and severity read from the NVD API on 2026-10-24). The description is the opening sentence plus a short summary, NOT the full verbatim text; run fetch_real_world.py to replace it with the verbatim NVD text.",
+        "cvss_v3_score": 8.1,
+        "severity": "HIGH",
+        "description": "A race condition in OpenSSH's sshd can cause unsafe signal handling, which an unauthenticated remote attacker may trigger by failing to authenticate within a set time period. It is a regression of CVE-2006-5051.",
+        "attack_vector": "network"
+      },
+      "vendor_changelog": {
+        "source_type": "vendor_changelog",
+        "source_name": "OpenSSH 9.8 release notes",
+        "is_real_public_data": true,
+        "note": "REAL vendor text: verbatim fragments (joined by ' ... ') from https://www.openssh.org/txt/release-9.8, read on 2026-10-24. Only the quoted fragments are used.",
+        "text": "Race condition in sshd(8) ... Portable OpenSSH is affected between 8.5p1 and 9.7p1 (inclusive) ... This release contains fixes for two security problems."
+      },
+      "internal_ticket": {
+        "source_type": "internal_ticket",
+        "source_name": "Ticket SYS-1187 (synthetic)",
+        "is_real_public_data": false,
+        "note": "SYNTHETIC - invented for this demo. Nobody publishes real internal tickets.",
+        "text": "Upgraded OpenSSH to 9.8 on all 41 Linux servers; sshd -V checked on every host through the configuration tool and the fleet report shows 41 of 41 on 9.8."
+      }
+    },
+    "expected_conflict": "None expected: the vendor fix and the internal check agree.",
+    "expected_outcome": "resolved_downgrade",
+    "as_of": "2026-10-24"
+  },
+  "CVE-2024-3094": {
+    "cve_id": "CVE-2024-3094",
+    "nickname": "REAL CVE (xz backdoor) - real advisory, synthetic ticket",
+    "sources": {
+      "nvd": {
+        "source_type": "public_vulnerability_database",
+        "source_name": "NVD (National Vulnerability Database)",
+        "is_real_public_data": true,
+        "note": "Real NVD record (CVSS and severity read from the NVD API on 2026-10-24). The description is the opening sentence plus a short summary, NOT the full verbatim text; run fetch_real_world.py to replace it with the verbatim NVD text.",
+        "cvss_v3_score": 10.0,
+        "severity": "CRITICAL",
+        "description": "Malicious code was discovered in the upstream tarballs of xz, starting with version 5.6.0. The liblzma build process hides a prebuilt object file inside a disguised test file, which alters liblzma functions.",
+        "attack_vector": "network"
+      },
+      "vendor_changelog": {
+        "source_type": "vendor_changelog",
+        "source_name": "XZ Utils project page on the backdoor",
+        "is_real_public_data": true,
+        "note": "REAL vendor text: verbatim fragments (joined by ' ... ') from https://tukaani.org/xz-backdoor/, read on 2026-10-24. Only the quoted fragments are used.",
+        "text": "XZ Utils 5.6.0 and 5.6.1 release tarballs contain a backdoor ... New, clean XZ Utils releases were made on 2024-05-29."
+      },
+      "internal_ticket": {
+        "source_type": "internal_ticket",
+        "source_name": "Ticket SEC-2290 (synthetic)",
+        "is_real_public_data": false,
+        "note": "SYNTHETIC - invented for this demo. Nobody publishes real internal tickets.",
+        "text": "Package inventory shows xz 5.4.5 on all build and production images; no host has 5.6.0 or 5.6.1. One developer laptop image was not part of the inventory and may have pulled a newer package. Still to be checked."
+      }
+    },
+    "expected_conflict": "Vendor states which versions are bad; the ticket shows one image outside the inventory.",
+    "expected_outcome": "unresolved",
+    "as_of": "2026-10-24"
+  }
+}

@@ -1,0 +1,1 @@
+Checked prod-cluster-3 and prod-cluster-4: hardened image, setting confirmed. prod-cluster-1 and prod-cluster-2 were migrated to a customer-managed image; the lookup setting there is unconfirmed.

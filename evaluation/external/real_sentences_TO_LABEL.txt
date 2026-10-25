@@ -1,0 +1,46 @@
+# Real sentences from public advisories - please label
+#
+# Instructions: in each line, replace the ? with H or L. After labeling, save the file as
+#   evaluation/external/inbox/real_sentences.txt
+# H = the sentence by itself reports a complete state / a complete fix, without doubt or gap.
+# L = the sentence leaves doubt, a gap, a partial state, something open, a reservation, "no fix" or an exception.
+# If it is only an instruction or background and not a statement about the state: leave the ? or delete the line.
+# Decide by YOUR gut feeling, even if it is close. Do NOT look at the sources file before you are finished.
+# The wordings come from public pages of vendors and projects (sources: real_sentences_SOURCES.md).
+
+? | Log4j version 2.15.0 contained an earlier fix for the vulnerability, but that patch did not disable attacker-controlled JNDI lookups in all situations.
+? | The Jenkins infrastructure team is currently checking all Jenkins project infrastructure for the presence of vulnerable versions of the Log4j library.
+? | For Log4j versions >=2.10 set the system property log4j2.formatMsgNoLookups or the environment variable LOG4J_FORMAT_MSG_NO_LOOKUPS to true.
+? | It was found that the fix to address CVE-2021-44228 in Log4j 2.15.0 was incomplete in certain non-default configurations.
+? | OpenSSL 1.0.1g is NOT vulnerable.
+? | As long as the vulnerable version of OpenSSL is in use it can be abused. Fixed OpenSSL has been released and now it has to be deployed.
+? | No backward incompatibility issues are expected with the recommended upgrades.
+? | It is using the built-in Jetty web application container that is bundled inside Jenkins and does not include Log4j.
+? | Any workarounds are documented in the product-specific Cisco bugs, which are identified in the Vulnerable Products section.
+? | Product fixes that are listed in this advisory will address both CVE-2021-44228 and CVE-2021-45046 unless otherwise noted.
+? | Service providers and users have to install the fix as it becomes available for the operating systems, networked appliances and software they use.
+? | If you are hosting your Jenkins in a separate web application container like Tomcat, Websphere, or Glassfish, check with the providers of those containers to assess if they are using a vulnerable version of Log4j.
+? | Additional backports of this fix have been made available in versions 2.3.1, 2.12.2, and 2.12.3.
+? | VMware products will update open source components (including log4j) to the latest available versions in future releases.
+? | Users of affected versions should upgrade to the corresponding fixed version.
+? | FreeBSD does not ship Java or Apache log4j as part of the base operating system.
+? | From log4j 2.16.0, this behavior has been disabled by default.
+? | Implement a Servlet filter which will validate Content-Type and throw away request with suspicious values not matching multipart/form-data.
+? | Jenkins plugins may be using Log4j.
+? | Only the org.apache.logging.log4j:log4j-core package is directly affected by this vulnerability.
+? | Cisco has reviewed CVE-2021-45105 and CVE-2021-44832 and has determined that no Cisco products or cloud offerings are impacted.
+? | There are other mitigation steps for applications that cannot upgrade to the above versions.
+? | Please note that Log4J v1 is End Of Life (EOL) and will not receive patches for this issue.
+? | If you are using Jakarta based file upload Multipart parser, upgrade to Apache Struts version 2.3.32 or 2.5.10.1.
+? | VMware has investigated and has found no evidence that these vulnerabilities are exploitable in VMware products.
+? | If the application is deployed as a Spring Boot executable jar, i.e. the default, it is not vulnerable.
+? | We have updated our software to prevent attacks, in some cases by upgrading log4j.
+? | Cisco assessed all products and services for impact from both CVE-2021-44228 and CVE-2021-45046.
+? | Users who want to avoid attacker-controlled JNDI lookups but cannot upgrade to 2.16.0 must ensure that no such lookups resolve to attacker-provided data and ensure that the JndiLookup class is not loaded.
+? | In Log4j 2.12.2 (for Java 7) and 2.16.0 (for Java 8 or later) the message lookups feature has been completely removed.
+? | OpenSSL 1.0.1g released on 7th of April 2014 fixes the bug.
+? | Upgrade to Log4j 2.3.1 (for Java 6), 2.12.2 (for Java 7), or 2.15.0 (for Java 8 and later).
+? | The specific exploit requires the application to run on Tomcat as a WAR deployment.
+? | We may decide to disable some services temporarily out of an abundance of caution.
+? | This issue only affects log4j versions between 2.0 and 2.14.1.
+? | The Jenkins security team has confirmed that Log4j is not used in Jenkins core.

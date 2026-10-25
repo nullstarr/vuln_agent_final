@@ -1,0 +1,34 @@
+{
+ "llm/dev": {
+  "n": 144,
+  "correct": 127,
+  "n_low": 54,
+  "missed": 3,
+  "n_high": 90,
+  "false_alarm": 14
+ },
+ "llm/test": {
+  "n": 142,
+  "correct": 140,
+  "n_low": 56,
+  "missed": 2,
+  "n_high": 86,
+  "false_alarm": 0
+ },
+ "combined/dev": {
+  "n": 144,
+  "correct": 130,
+  "n_low": 54,
+  "missed": 0,
+  "n_high": 90,
+  "false_alarm": 14
+ },
+ "combined/test": {
+  "n": 142,
+  "correct": 140,
+  "n_low": 56,
+  "missed": 2,
+  "n_high": 86,
+  "false_alarm": 0
+ }
+}

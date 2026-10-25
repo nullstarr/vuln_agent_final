@@ -1,0 +1,5 @@
+{"resultsPerPage":1,"startIndex":0,"totalResults":1,"format":"NVD_CVE","version":"2.0",
+ "_fixture_note":"Hand-written in the shape of the documented NVD API 2.0 schema for offline tests. NOT a recorded live response.",
+ "vulnerabilities":[{"cve":{"id":"CVE-2021-44228","published":"2021-12-10T10:15:09.143","lastModified":"2023-04-03T20:15:00.000",
+ "descriptions":[{"lang":"en","value":"Apache Log4j2 JNDI features do not protect against attacker-controlled LDAP and other JNDI related endpoints."},{"lang":"es","value":"(texto)"}],
+ "metrics":{"cvssMetricV31":[{"cvssData":{"baseScore":10.0,"baseSeverity":"CRITICAL","attackVector":"NETWORK"}}]}}}]}

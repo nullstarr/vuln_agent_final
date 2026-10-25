@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>World Model Viewer</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --text: #e8e8ea; --muted: #9aa0ab;
+    --high: #3ddc84; --mid: #f0b429; --low: #ef4444; --border: #2a2e37;
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--text); font-family: -apple-system, Segoe UI, Roboto, sans-serif;
+    margin: 0; padding: 24px; min-height: 100vh;
+  }
+  h1 { font-size: 1.3rem; margin: 0 0 4px; }
+  .subtitle { color: var(--muted); font-size: 0.9rem; margin-bottom: 20px; }
+  .toolbar { display: flex; gap: 12px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
+  input[type="file"] {
+    color: var(--text); background: var(--panel); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 12px; font-size: 0.9rem;
+  }
+  .layout { display: grid; grid-template-columns: 1fr 1fr 300px; gap: 20px; align-items: start; }
+  @media (max-width: 1100px) { .layout { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 800px) { .layout { grid-template-columns: 1fr; } }
+  .report-panel pre {
+    white-space: pre-wrap; word-break: break-word; font-family: inherit;
+    font-size: 0.85rem; line-height: 1.5; margin: 0; color: var(--text);
+  }
+  .report-panel { max-height: 640px; overflow-y: auto; }
+  .graph-panel, .detail-panel {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px;
+  }
+  .legend { display: flex; gap: 16px; font-size: 0.85rem; color: var(--muted); margin-bottom: 12px; flex-wrap: wrap; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  svg { width: 100%; height: auto; display: block; }
+  .node-label { fill: var(--text); font-size: 12px; text-anchor: middle; pointer-events: none; }
+  .node-sub { fill: var(--muted); font-size: 10px; text-anchor: middle; pointer-events: none; }
+  circle.node { cursor: pointer; stroke: var(--border); stroke-width: 2; }
+  circle.node:hover { stroke: var(--text); }
+  .edge-label { font-size: 10px; text-anchor: middle; }
+  .empty-state { color: var(--muted); padding: 40px; text-align: center; font-size: 0.95rem; }
+  .thumb-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px; margin-bottom: 20px;
+  }
+  .thumb {
+    background: var(--panel); border: 2px solid var(--border); border-radius: 10px;
+    padding: 6px; cursor: pointer; text-align: center; transition: border-color 0.15s;
+  }
+  .thumb:hover { border-color: var(--muted); }
+  .thumb.selected { border-color: #7aa2ff; }
+  .thumb svg { width: 100%; height: 90px; display: block; }
+  .thumb .thumb-label {
+    font-size: 0.72rem; color: var(--muted); margin-top: 4px; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis;
+  }
+  .tl-steps { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; }
+  .tl-step { min-width: 230px; max-width: 260px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 10px; }
+  .tl-step.changed { border-color: #7aa2ff; }
+  .tl-day { font-size: 0.74rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .tl-decision { font-weight: 700; margin: 2px 0 4px; }
+  .tl-event { font-size: 0.84rem; margin-bottom: 4px; }
+  .tl-why { font-size: 0.78rem; color: var(--muted); margin-bottom: 6px; line-height: 1.35; }
+  .chip { display: inline-block; font-size: 0.7rem; padding: 1px 7px; border-radius: 999px; margin: 0 4px 3px 0; border: 1px solid var(--border); }
+  .chip.on { color: var(--text); } .chip.off { color: var(--muted); opacity: 0.55; text-decoration: line-through; }
+  .triage-table { width: 100%; font-size: 0.82rem; border-collapse: collapse; }
+  .triage-table td, .triage-table th { padding: 5px 8px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+  .triage-table th { color: var(--muted); font-weight: 600; font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.04em; }
+  .triage-table tr[data-case] { cursor: pointer; }
+  .triage-table tr[data-case]:hover { background: rgba(255,255,255,0.04); }
+  .engine-table { width: 100%; font-size: 0.76rem; border-collapse: collapse; margin: 6px 0 8px; }
+  .engine-table td { padding: 3px 4px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .engine-note { font-size: 0.8rem; color: var(--muted); margin-top: 6px; line-height: 1.4; }
+  .load-warning { color: var(--mid); font-size: 0.82rem; margin-bottom: 10px; }
+  .detail-panel h2 { font-size: 1rem; margin: 0 0 8px; }
+  .detail-field { margin-bottom: 10px; }
+  .detail-field .k { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; }
+  .detail-field .v { font-size: 0.92rem; margin-top: 2px; word-break: break-word; }
+  .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.78rem; font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<h1>World Model Viewer</h1>
+<div class="subtitle">
+  Meterless-style Entity/Edge graphs — pick your <code>logs/</code> folder once below,
+  every <code>*_world_model.json</code> file in it loads automatically as a thumbnail.
+  Runs entirely in this page; nothing is uploaded anywhere.
+</div>
+
+<div class="toolbar">
+  <input type="file" id="file-input" webkitdirectory multiple>
+  <span id="file-name" style="color: var(--muted); font-size: 0.85rem;">No folder selected.</span>
+</div>
+
+<div id="load-warning"></div>
+<div id="triage-container"></div>
+<div id="thumb-grid" class="thumb-grid"></div>
+
+<div class="layout">
+  <div class="graph-panel">
+    <div class="legend">
+      <span><span class="dot" style="background:var(--high)"></span> confidence ≥ 0.7</span>
+      <span><span class="dot" style="background:var(--mid)"></span> 0.5 – 0.7</span>
+      <span><span class="dot" style="background:var(--low)"></span> &lt; 0.5 (uncertain / conflicting)</span>
+    </div>
+    <div id="graph-container">
+      <div class="empty-state">No folder selected yet. Click above and choose your <code>logs/</code> folder.</div>
+    </div>
+  </div>
+  <div class="graph-panel report-panel">
+    <h2 style="font-size:1rem; margin:0 0 8px;">Analyst Report</h2>
+    <div id="report-container" style="color: var(--muted); font-size: 0.9rem;">
+      Pick a case above to see its full report here.
+    </div>
+  </div>
+  <div class="detail-panel">
+    <h2>Node Details</h2>
+    <div id="detail-container" style="color: var(--muted); font-size: 0.9rem;">
+      Click a node in the graph to see its full record here.
+    </div>
+    <h2 style="margin-top:18px;">Meterless engine</h2>
+    <div id="engine-container" style="color: var(--muted); font-size: 0.9rem;">
+      Pick a case to see what the real Meterless World Model decided.
+    </div>
+  </div>
+</div>
+
+<div id="timeline-container" style="margin-top:16px;"></div>
+
+<script>
+function confidenceColor(c) {
+  if (c >= 0.7) return getCss('--high');
+  if (c >= 0.5) return getCss('--mid');
+  return getCss('--low');
+}
+function getCss(varName) {
+  return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+}
+
+function computeLayout(wm, width, height) {
+  const vuln = wm.entities.find(e => e.type === "vulnerability") || wm.entities[0];
+  const sources = wm.entities.filter(e => e.id !== vuln.id);
+  const cx = width / 2, cy = height / 2;
+  const radius = Math.min(width, height) * 0.35;
+
+  const positions = {};
+  positions[vuln.id] = { x: cx, y: cy, entity: vuln };
+
+  const n = Math.max(sources.length, 1);
+  sources.forEach((src, i) => {
+    const angle = (2 * Math.PI * i) / n - Math.PI / 2;
+    positions[src.id] = {
+      x: cx + radius * Math.cos(angle),
+      y: cy + radius * Math.sin(angle),
+      entity: src,
+    };
+  });
+  return { positions, vuln, sources };
+}
+
+function escapeXml(s) {
+  return String(s ?? "").replace(/[<>&"']/g, c => ({
+    "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;", "'": "&#39;"
+  }[c]));
+}
+
+function renderGraph(wm) {
+  const width = 640, height = 520;
+  const { positions, vuln, sources } = computeLayout(wm, width, height);
+
+  let svg = `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">`;
+
+  // Kanten zuerst, damit sie hinter den Knoten liegen
+  for (const edge of wm.edges) {
+    const from = positions[edge.from_ ?? edge.from];
+    const to = positions[edge.to];
+    if (!from || !to) continue;
+    const color = confidenceColor(edge.confidence);
+    const midX = (from.x + to.x) / 2, midY = (from.y + to.y) / 2;
+    svg += `<line x1="${from.x}" y1="${from.y}" x2="${to.x}" y2="${to.y}" stroke="${color}" stroke-width="${1.5 + edge.confidence * 2.5}" />`;
+    svg += `<text class="edge-label" x="${midX}" y="${midY - 6}" fill="${color}">${edge.confidence.toFixed(2)}</text>`;
+  }
+
+  // Knoten
+  const allNodes = [{ ...positions[vuln.id] }, ...sources.map(s => positions[s.id])];
+  for (const node of allNodes) {
+    const e = node.entity;
+    const r = e.type === "vulnerability" ? 34 : 26;
+    const fill = e.type === "vulnerability" ? "#3b4252" : confidenceColor(e.confidence);
+    svg += `<circle class="node" data-id="${escapeXml(e.id)}" cx="${node.x}" cy="${node.y}" r="${r}" fill="${fill}" />`;
+    const label = e.name.length > 16 ? e.name.slice(0, 15) + "…" : e.name;
+    svg += `<text class="node-label" x="${node.x}" y="${node.y + 4}">${escapeXml(label)}</text>`;
+    svg += `<text class="node-sub" x="${node.x}" y="${node.y + r + 14}">${escapeXml(e.type)}</text>`;
+  }
+
+  svg += `</svg>`;
+  return svg;
+}
+
+function showDetail(entity) {
+  const c = document.getElementById("detail-container");
+  const rows = [
+    ["Name", entity.name], ["Type", entity.type], ["State", entity.state],
+    ["Confidence", entity.confidence != null ? entity.confidence.toFixed(2) : "-"],
+    ["Summary", entity.summary || "(none)"],
+    ["Tags", (entity.tags || []).join(", ") || "(none)"],
+    ["Custom (not from a public source)", entity.is_custom ? "yes" : "no"],
+    ["ID", entity.id],
+  ];
+  c.innerHTML = rows.map(([k, v]) =>
+    `<div class="detail-field"><div class="k">${escapeXml(k)}</div><div class="v">${escapeXml(v)}</div></div>`
+  ).join("");
+}
+
+function engineHtml(engine) {
+  if (!engine) {
+    return `<div class="engine-note">No engine information in this file (it was written by an older run).</div>`;
+  }
+  if (!engine.used) {
+    return `<div class="engine-note"><b>Not used:</b> ${escapeXml(engine.reason)}.<br>The graph was built by the Python implementation.</div>`;
+  }
+  const rows = (engine.facts || []).map(f => {
+    const lost = !!f.superseded_by;
+    return `<tr><td>${escapeXml(f.predicate)}</td><td>${escapeXml(f.source_kind)}</td>` +
+           `<td>${Number(f.confidence).toFixed(2)}</td>` +
+           `<td style="color:${lost ? getCss('--low') : getCss('--high')}">${lost ? 'superseded' : 'wins'}</td></tr>`;
+  }).join("");
+  const verdicts = (engine.verdicts || []).map(v => `<div class="engine-note">${escapeXml(v.explanation)}</div>`).join("") ||
+                   `<div class="engine-note">No conflicting facts - nothing to resolve.</div>`;
+  const p = engine.id_parity || { checked: 0, mismatches: [] };
+  const absent = (engine.absent_sources || []).length
+    ? `<div class="engine-note">No evidence sent for missing source(s): ${escapeXml(engine.absent_sources.join(", "))}.</div>` : "";
+  const per = engine.persistence;
+  const stored = per && per.enabled
+    ? `<div class="engine-note">stored world: ${per.resumed ? 'resumed' : 'new'} &middot; ${escapeXml(per.new_events)} new events this run` +
+      `${per.derived_state_rebuilt_from_log ? ' &middot; conflict state rebuilt from the log' : ''}</div>` : "";
+  return `<div class="engine-note"><b>${escapeXml(engine.engine)}</b> on node ${escapeXml(engine.node)}<br>` +
+         `policy: ${escapeXml(engine.policy)} (${escapeXml((engine.source_priority || []).join(" > "))})</div>` +
+         `<table class="engine-table"><tr><td><b>fact</b></td><td><b>source</b></td><td><b>conf.</b></td><td></td></tr>${rows}</table>` +
+         verdicts + absent +
+         stored +
+         `<div class="engine-note">ID parity with our Python port: ${p.checked - p.mismatches.length}/${p.checked} · ${engine.event_count} events in the engine's log</div>`;
+}
+
+function triageHtml(ranked) {
+  if (!Array.isArray(ranked) || ranked.length === 0) return "";
+  const rows = ranked.map(r => {
+    const sevColor = r.baseline_severity === "CRITICAL" ? getCss('--low') : r.baseline_severity === "HIGH" ? getCss('--mid') : getCss('--muted');
+    const decColor = r.decision === "resolved" ? getCss('--high') : getCss('--low');
+    const score = r.cvss != null ? " " + Number(r.cvss).toFixed(1) : "";
+    return `<tr data-case="${escapeXml(r.cve_id)}"><td>${escapeXml(r.rank)}</td><td>${escapeXml(r.cve_id)}</td>` +
+           `<td style="color:${sevColor}">${escapeXml(r.baseline_severity)}${score}</td>` +
+           `<td style="color:${decColor}">${escapeXml(r.decision)}</td><td>${escapeXml(r.why)}</td></tr>`;
+  }).join("");
+  return `<div class="graph-panel" style="margin-bottom:16px;">` +
+         `<h2 style="font-size:1rem; margin:0 0 8px;">Triage &mdash; where to start (click a row to open the case)</h2>` +
+         `<table class="triage-table"><tr><th>#</th><th>CVE</th><th>baseline</th><th>decision</th><th>why</th></tr>${rows}</table></div>`;
+}
+
+function timelineHtml(tl) {
+  if (!tl || !Array.isArray(tl.days) || tl.days.length === 0) return "";
+  const labels = { nvd: "NVD", vendor_changelog: "Vendor", internal_ticket: "Internal" };
+  const perDay = (tl.engine && tl.engine.used && Array.isArray(tl.engine.per_day)) ? tl.engine.per_day : [];
+  const steps = tl.days.map((d, i) => {
+    const color = d.decision === "resolved" ? getCss('--high') : getCss('--low');
+    const chips = Object.keys(labels).map(k =>
+      `<span class="chip ${d.evidence_present.includes(k) ? 'on' : 'off'}">${labels[k]}</span>`).join("");
+    const e = perDay[i];
+    const eng = e && e.winner_source
+      ? `<div class="tl-why">engine: <b>${escapeXml(e.winner_source)}</b> wins` +
+        (e.superseded.length ? `; superseded: ${escapeXml(e.superseded.map(x => x.source).join(", "))}` : "") + `</div>` : "";
+    return `<div class="tl-step${d.changed ? ' changed' : ''}">` +
+           `<div class="tl-day">day ${escapeXml(d.day)} &middot; ${escapeXml(d.date)}</div>` +
+           `<div class="tl-decision" style="color:${color}">${escapeXml(d.decision)}${d.changed ? ' &larr; changed' : ''}</div>` +
+           `<div class="tl-event">${escapeXml(d.event)}</div>` +
+           `<div class="tl-why">${escapeXml(d.why)}</div>${chips}${eng}</div>`;
+  }).join("");
+  let engineLine = "";
+  if (tl.engine) {
+    if (tl.engine.used) {
+      const t = tl.engine.time_travel || { checked: 0, mismatches: [] };
+      engineLine = `<div class="engine-note">Meterless engine on node ${escapeXml(tl.engine.node)}: each evidence source existed exactly ` +
+                   `from its first day (time-travel check ${t.mismatches.length === 0 ? 'agrees' : 'DISAGREES'}, ` +
+                   `${t.checked - t.mismatches.length}/${t.checked}); ${escapeXml(tl.engine.event_count)} events logged. ` +
+                   `The winner per day is the engine's live verdict at that point.</div>`;
+    } else {
+      engineLine = `<div class="engine-note">Meterless engine not used: ${escapeXml(tl.engine.reason)}.</div>`;
+    }
+  }
+  return `<div class="graph-panel"><h2 style="font-size:1rem; margin:0 0 4px;">Timeline &mdash; ${escapeXml(tl.title)}</h2>` +
+         `<div class="engine-note" style="margin:0 0 10px;">${escapeXml(tl.note)}</div>` +
+         `<div class="tl-steps">${steps}</div>${engineLine}</div>`;
+}
+
+function showTimeline(tl) {
+  document.getElementById("timeline-container").innerHTML = timelineHtml(tl);
+}
+
+function showEngine(wm) {
+  document.getElementById("engine-container").innerHTML = engineHtml(wm.engine);
+}
+
+let currentWorldModel = null;
+
+function loadWorldModel(wm) {
+  currentWorldModel = wm;
+  const container = document.getElementById("graph-container");
+  if (!wm.entities || wm.entities.length === 0) {
+    container.innerHTML = `<div class="empty-state">This file has no entities.</div>`;
+    return;
+  }
+  if (!wm.edges) wm.edges = [];  // robust gegenueber einer Datei ohne edges-Feld
+  container.innerHTML = renderGraph(wm);
+  showEngine(wm);
+  container.querySelectorAll("circle.node").forEach(circle => {
+    circle.addEventListener("click", () => {
+      const id = circle.getAttribute("data-id");
+      const entity = wm.entities.find(e => e.id === id);
+      if (entity) showDetail(entity);
+    });
+  });
+}
+
+function readFileAsText(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => resolve(e.target.result);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsText(file);
+  });
+}
+
+function filterWorldModelFiles(fileList) {
+  // Nur Dateien, deren NAME auf _world_model.json endet - ein Ordner
+  // gewaehlt per webkitdirectory liefert sonst auch .gitkeep & co. mit.
+  return Array.from(fileList).filter(f => f.name.endsWith("_world_model.json"));
+}
+
+function filterReportFiles(fileList) {
+  return Array.from(fileList).filter(f => f.name.endsWith("_report.txt"));
+}
+
+function caseIdFromWorldModelName(name) {
+  return name.replace("_world_model.json", "");
+}
+function caseIdFromReportName(name) {
+  return name.replace("_report.txt", "");
+}
+
+function showReport(text) {
+  const c = document.getElementById("report-container");
+  if (text == null) {
+    c.innerHTML = `<div class="empty-state" style="padding:10px;">No matching *_report.txt file found ` +
+      `for this case - run main.py for it first.</div>`;
+    return;
+  }
+  c.innerHTML = `<pre>${escapeXml(text)}</pre>`;
+}
+
+async function loadAllFromFolder(fileList) {
+  const worldModelCandidates = filterWorldModelFiles(fileList);
+  const reportCandidates = filterReportFiles(fileList);
+  document.getElementById("file-name").textContent =
+    `${fileList.length} file(s) in folder, ${worldModelCandidates.length} world model(s), ` +
+    `${reportCandidates.length} report(s)`;
+
+  const grid = document.getElementById("thumb-grid");
+  const warningBox = document.getElementById("load-warning");
+  grid.innerHTML = "";
+  warningBox.innerHTML = "";
+
+  if (worldModelCandidates.length === 0) {
+    document.getElementById("graph-container").innerHTML =
+      `<div class="empty-state">No *_world_model.json files found in that folder.</div>`;
+    return;
+  }
+
+  // Berichte zuerst separat einlesen, in eine Zuordnung CVE-ID -> Text -
+  // ein fehlender oder kaputter Bericht darf den Graphen nie verhindern,
+  // beides laedt unabhaengig voneinander.
+  const reportsById = {};
+  for (const file of reportCandidates) {
+    try {
+      reportsById[caseIdFromReportName(file.name)] = await readFileAsText(file);
+    } catch (err) {
+      // ein einzelner nicht lesbarer Bericht wird einfach uebersprungen,
+      // der Graph fuer diesen Fall bleibt trotzdem nutzbar
+    }
+  }
+
+  const failures = [];
+  const loaded = [];
+  for (const file of worldModelCandidates) {
+    try {
+      const text = await readFileAsText(file);
+      const wm = JSON.parse(text);
+      loaded.push({ name: file.name, wm, caseId: caseIdFromWorldModelName(file.name) });
+    } catch (err) {
+      failures.push(`${file.name}: ${err.message}`);
+    }
+  }
+
+  if (failures.length > 0) {
+    warningBox.innerHTML = `<div class="load-warning">Skipped ${failures.length} file(s) that could not ` +
+      `be read as valid JSON: ${escapeXml(failures.join("; "))}</div>`;
+  }
+  if (loaded.length === 0) {
+    document.getElementById("graph-container").innerHTML =
+      `<div class="empty-state">None of the matching files could be loaded - see the warning above.</div>`;
+    return;
+  }
+
+  // alphabetisch sortieren, damit die Reihenfolge jedes Mal gleich ist
+  loaded.sort((a, b) => a.name.localeCompare(b.name));
+
+  const timelinesById = {};
+  for (const f of Array.from(fileList).filter(f => f.name.endsWith("_timeline.json"))) {
+    try { timelinesById[f.name.replace("_timeline.json", "")] = JSON.parse(await readFileAsText(f)); } catch (err) { /* defekte Datei: Zeitleiste entfaellt */ }
+  }
+
+  loaded.forEach((entry, i) => {
+    const card = document.createElement("div");
+    card.className = "thumb";
+    card.dataset.index = i;
+    card.dataset.case = entry.caseId;
+    try {
+      card.innerHTML = renderGraph(entry.wm) +
+        `<div class="thumb-label">${escapeXml(entry.caseId)}</div>`;
+    } catch (err) {
+      card.innerHTML = `<div class="empty-state" style="padding:10px;font-size:0.7rem;">` +
+        `${escapeXml(entry.name)}<br>could not render: ${escapeXml(err.message)}</div>`;
+    }
+    card.addEventListener("click", () => {
+      grid.querySelectorAll(".thumb").forEach(c => c.classList.remove("selected"));
+      card.classList.add("selected");
+      loadWorldModel(entry.wm);
+      showReport(reportsById[entry.caseId] ?? null);
+      showTimeline(timelinesById[entry.caseId] ?? null);
+    });
+    grid.appendChild(card);
+  });
+
+  // Rangliste (triage.json), falls im Ordner vorhanden: Zeile anklicken oeffnet den Fall
+  const triageBox = document.getElementById("triage-container");
+  triageBox.innerHTML = "";
+  const triageFile = Array.from(fileList).find(f => f.name === "triage.json");
+  if (triageFile) {
+    try {
+      triageBox.innerHTML = triageHtml(JSON.parse(await readFileAsText(triageFile)));
+      triageBox.querySelectorAll("tr[data-case]").forEach(row => row.addEventListener("click", () => {
+        const card = Array.from(grid.querySelectorAll(".thumb")).find(c => c.dataset.case === row.dataset.case);
+        if (card) { card.click(); card.scrollIntoView({ block: "nearest" }); }
+      }));
+    } catch (err) {
+      triageBox.innerHTML = `<div class="load-warning">triage.json could not be read: ${escapeXml(err.message)}</div>`;
+    }
+  }
+
+  // das erste Thumbnail automatisch als Startansicht oeffnen
+  grid.querySelector(".thumb").click();
+}
+
+document.getElementById("file-input").addEventListener("change", (ev) => {
+  const files = ev.target.files;
+  if (!files || files.length === 0) return;
+  loadAllFromFolder(files);
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,34 @@
+SPONSOR TECHNOLOGY - how it is used, and the test or demo that shows it working
+Project: Vulnerability Conflict Resolver (Track 2: The Agent That Can Explain Why). Repo: see README.md, JUROR_QUICKSTART.md.
+
+ZETARIS (data layer, mandatory) - integrated and checked live
+How: the three evidence sources (NVD record, vendor changelog, internal ticket) are served as JSON (integrations/zetaris/data_server.py),
+registered in a local Zetaris 2.4.3.1 as REST tables, flattened by views and joined by the SQL view vuln.signals (NVD LEFT JOIN vendor
+LEFT JOIN ticket; a missing source stays missing). A fourth REST table holds an exploitation signal, read by a second query. The tool reads
+cases through the Zetaris REST API (POST /sql-editor/sqls/run) when started with --source zetaris; --source auto falls back to the files
+and says so in the report. The four agents are unchanged.
+Show it: python3 main.py --case CVE-2014-0160 --source zetaris  -> the report ends with a DATA LAYER section naming the view, the
+tables and the SQL query. Test: python3 setup_zetaris.py --run, then python3 check_zetaris.py --live (5 checks incl. "all 17 cases give
+the identical result from Zetaris and from the files"); python3 check_zetaris.py runs 28 checks offline against a stand-in server.
+Limit: one local instance, simulated tickets, no production load.
+
+METERLESS ENGINE (mandatory) - the World Model engine, unmodified, in a working feature
+Which: Meterless' TypeScript reference World Model engine (Apache-2.0), unmodified, run through a small Node bridge
+(integrations/meterless/, agents/meterless_bridge.py). Other engines (H-MEM, Markovian, Scout Intent, Swarm) are NOT used.
+Working feature: every case sends its sources as facts with provenance to the engine under the conflict policy
+source-priority (internal ticket > NVD > vendor). The engine decides which belief wins, marks the others superseded and keeps the
+audit log; the report's EVIDENCE TRAIL is built from that state, and the timeline feature uses it day by day.
+Show it: python3 main.py --case CVE-2021-44228 -> EVIDENCE TRAIL; logs/<CVE>_meterless.jsonl holds every event with its source.
+Test: python3 check_meterless_bridge.py (entity IDs identical to the real engine's, conflict verdict, idempotent re-run with 0 new events,
+crash recovery, evidence file, behaviour without Node).
+Limit: the verdict follows the priority order we configured; the engine's value here is the auditable "why".
+
+METERLESS NIGHTSHIFT / RUNTIME (primary AI provider per the rules) - implemented, NOT run against a real Runtime
+There is no Nightshift build for Linux x86_64 (the author's machine). The provider exists (agents/meterless_runtime.py, contract-based
+OpenAI-compatible /v1/chat/completions, Bearer token, routing modes) and is tested against a stand-in server only
+(python3 check_meterless_runtime.py, 21 checks). It has never run against a real Nightshift. The AI mode is optional; the default is rule-based.
+
+NVIDIA (optional): Nemotron 3.5 lightning through NVIDIA's hosted API directly, not through Nightshift. Measured on our own corpus
+(test half 2/56 hedges missed, 0/86 false alarms, two runs) and on 24 real advisory sentences labelled by the author (14/17 clear
+sentences rated uncertain, one run): the corpus result does not carry over. See evaluation/RESULTS.md.
+CURSOR (optional): used only for brainstorming. The code was written with Claude.
